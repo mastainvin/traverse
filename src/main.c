@@ -1,8 +1,10 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include "interface.h"
 #include <time.h>
+
 
 
 int main(void){
@@ -21,8 +23,8 @@ int main(void){
 
     // Taille de la fenetre
     SDL_Rect fenetre;
-    fenetre.h = 700;
-    fenetre.w = 800;
+    fenetre.h = 800;
+    fenetre.w = 1280;
 
     // Taille du plateau
     SDL_Rect plateau;
@@ -33,31 +35,43 @@ int main(void){
 
     /* ------------------------- */
 
+    joueur tableauJoueurs[4];
+    initTabJoueur(tableauJoueurs);
 
+    /*SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
+*/
     SDL_Window *window = NULL;
     SDL_Renderer *renderer = NULL;
 
 
+    if (SDL_Init(SDL_INIT_VIDEO) != 0)
+      SDL_ExitWithError("Initialisation de la SDL",renderer,window);
 
-    if (SDL_Init(SDL_INIT_EVERYTHING) != 0)
-      SDL_ExitWithError("Initialisation de la SDL",NULL,NULL,renderer,window);
+    if(SDL_CreateWindowAndRenderer(fenetre.w,fenetre.h,SDL_WINDOW_FULLSCREEN,&window,&renderer) != 0)
+      SDL_ExitWithError("Creation fenetre et rendu echouee",renderer,window);
 
-    if(SDL_CreateWindowAndRenderer(fenetre.w,fenetre.h,0,&window,&renderer) != 0)
-      SDL_ExitWithError("Creation fenetre et rendu echouee",NULL,NULL,renderer,window);
+
+    //SDL_GetWindowSize(window,&fenetre.w,&fenetre.h);
+
+
+    SDL_ShowCursor(SDL_DISABLE);
 
     location loc = inMenu;
 
-    switch (loc) {
-      case inGame:
-        jeu(plateau,fenetre,window,renderer,tab);
-      break;
-      case inMenu:
-        menu(fenetre,window,renderer);
-      break;
-      default:
-        exit(EXIT_FAILURE);
-      break;
-    }
+    while (loc != quit) {
+      switch (loc) {
+        case inGame:
+          loc = jeu(plateau,fenetre,window,renderer,tab);
+        break;
+        case inMenu:
+          loc = menu(fenetre,window,renderer, plateau, tableauJoueurs);
+        break;
+        default:
+          SDL_ExitWithError("ERREUR : localisation utilisation", renderer, window);
+        break;
+      }
+  }
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
