@@ -35,8 +35,9 @@ int main(void){
 
     /* ------------------------- */
 
-    joueur tableauJoueurs[4];
-    initTabJoueur(tableauJoueurs);
+    partie *param_partie;
+    param_partie = malloc(sizeof(*param_partie));
+    initPartie(param_partie);
 
     /*SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
@@ -65,7 +66,7 @@ int main(void){
           loc = jeu(plateau,fenetre,window,renderer,tab);
         break;
         case inMenu:
-          loc = menu(fenetre,window,renderer, plateau, tableauJoueurs);
+          loc = menu(fenetre,window,renderer, plateau, param_partie);
         break;
         default:
           SDL_ExitWithError("ERREUR : localisation utilisation", renderer, window);

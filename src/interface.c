@@ -71,11 +71,9 @@ void creationBackground(SDL_Renderer *renderer, SDL_Rect fenetre){
   SDL_RenderFillRect(renderer,&background);
 }
 
-void initTabJoueur(joueur tab[4]){
-  for (int i = 0; i < 4; i++) {
-    tab[i].joue = false;
-    tab[i].humain = true;
-  }
+void initPartie(game param_partie){
+  param_partie->joueurs = 1;
+  param_partie->ordis = 1;
 }
 void creationFond(SDL_Renderer *renderer,SDL_Rect plateau,SDL_Rect fenetre,SDL_Texture *textureDamier){
 
@@ -216,7 +214,7 @@ menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect f
   menu_bouton selection_hover = rien;
   menu_bouton selection = rien;
 
-  if (coordCurseur.x >= 425 && coordCurseur.x <= 775) {
+  if (coordCurseur.x >= 465 && coordCurseur.x <= 815) {
     if (coordCurseur.y >= 300 && coordCurseur.y <= 350)
       selection_hover = jouer;
     else if(coordCurseur.y >= 375 && coordCurseur.y <= 425)
@@ -232,7 +230,7 @@ menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect f
     selection_hover = rien;
   }
 
-  if (coordClic.x >= 425 && coordClic.x <= 775){
+  if (coordClic.x >= 465 && coordClic.x <= 815){
     if (coordClic.y >= 300 && coordClic.y <= 350){
       selection = jouer;
     }else if(coordClic.y >= 375 && coordClic.y <= 425){
@@ -297,7 +295,7 @@ menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect f
   return selection;
 }
 
-location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_Rect plateau, joueur tableauJoueurs[4]){
+location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_Rect plateau, game param_partie){
 
   location loc = inMenu;
 
@@ -329,7 +327,7 @@ location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_
 
 
       if (selection != rien && selection != quitter)
-        loc = menu_secondaire(renderer,window,fenetre, selection,coordMouse,coordClic, tableauJoueurs);
+        selection = menu_secondaire(renderer,window,fenetre, selection,coordMouse,coordClic, param_partie);
 
       afficherCurseur(monCurseur,renderer);
       SDL_RenderPresent(renderer);
@@ -366,6 +364,8 @@ location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_
 
         if (selection == quitter)
           loc = quit;
+        if (selection == commencer)
+          loc = inGame;
     }
     detruireCurseur(monCurseur);
 
@@ -375,200 +375,257 @@ location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_
     return loc;
 }
 
-location menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect fenetre, menu_bouton selection, coord coordCurseur, coord coordClic, joueur tab[4]){
-  location loc = inMenu;
-
+menu_bouton menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect fenetre, menu_bouton selection, coord coordCurseur, coord coordClic, game param_partie){
+menu_bouton newSelection = rien;
   switch (selection) {
-    case jouer:
-        //int nbreJoueurs;
+    case jouer:{
+        // Affichage du titre nombre de joueurs
+        SDL_Surface *imageNbrJoueursTitre = NULL;
+        SDL_Texture *textureNbrJoueursTitre = NULL;
 
-        /* ----- checkbox -----*/
-        // Affichage des checkbox
-        for ( int i = 0; i < 4; i++) {
-            char nomDuFichier[500];
+        imageNbrJoueursTitre = SDL_LoadBMP("./../img/menu_secondaire/nbrJoueurs_titre.bmp");
 
-            sprintf(nomDuFichier,"./../img/menu_secondaire/checkbox_%d.bmp",tab[i].joue);
+        if(imageNbrJoueursTitre == NULL){
+          SDL_FreeSurface(imageNbrJoueursTitre);
+          SDL_ExitWithError("Creation image start echouee",renderer,window);
+        }
 
-            SDL_Surface *imageCheck = NULL;
-            SDL_Texture *textureCheck = NULL;
+        textureNbrJoueursTitre = SDL_CreateTextureFromSurface(renderer, imageNbrJoueursTitre);
+        SDL_FreeSurface(imageNbrJoueursTitre);
 
-            imageCheck = SDL_LoadBMP(nomDuFichier);
+        if(textureNbrJoueursTitre == NULL){
+          SDL_DestroyTexture(textureNbrJoueursTitre);
+          SDL_ExitWithError("Creation texture start echouee",renderer,window);
+        }
 
-            if(imageCheck == NULL){
-              SDL_FreeSurface(imageCheck);
-              SDL_ExitWithError("Creation image checkbox echouee",renderer,window);
-            }
+        SDL_Rect emplacementNbrJoueursTitre;
 
-            textureCheck = SDL_CreateTextureFromSurface(renderer, imageCheck);
-            SDL_FreeSurface(imageCheck);
+        if(SDL_QueryTexture(textureNbrJoueursTitre,NULL,NULL,&emplacementNbrJoueursTitre.w,&emplacementNbrJoueursTitre.h) != 0){
+          SDL_DestroyTexture(textureNbrJoueursTitre);
+          SDL_ExitWithError("Chargement en memoire start checkbox ",renderer,window);
+        }
 
-            if(textureCheck == NULL){
-              SDL_DestroyTexture(textureCheck);
-              SDL_ExitWithError("Creation texture checkbox echouee",renderer,window);
-            }
+        emplacementNbrJoueursTitre.x =  (fenetre.w - emplacementNbrJoueursTitre.w)/2 + 26;
+        emplacementNbrJoueursTitre.y = 30;
 
-            SDL_Rect emplacementCheck;
+        SDL_RenderCopy(renderer,textureNbrJoueursTitre,NULL,&emplacementNbrJoueursTitre);
+        SDL_DestroyTexture(textureNbrJoueursTitre);
 
-            if(SDL_QueryTexture(textureCheck,NULL,NULL,&emplacementCheck.w,&emplacementCheck.h) != 0){
-              SDL_DestroyTexture(textureCheck);
-              SDL_ExitWithError("Chargement en memoire texture checkbox ",renderer,window);
-            }
+        // Affichage du paramètre nombre joueurs
+        SDL_Surface *imageNbrJoueurs = NULL;
+        SDL_Texture *textureNbrJoueurs = NULL;
 
-            emplacementCheck.x =  (fenetre.w - emplacementCheck.w)/2 - 450;
-            emplacementCheck.y = 160 + i * 60;
+        imageNbrJoueurs = SDL_LoadBMP("./../img/menu_secondaire/nbrJoueurs.bmp");
 
-            SDL_RenderCopy(renderer,textureCheck,NULL,&emplacementCheck);
-            SDL_DestroyTexture(textureCheck);
+        if(imageNbrJoueurs == NULL){
+          SDL_FreeSurface(imageNbrJoueurs);
+          SDL_ExitWithError("Creation image start echouee",renderer,window);
+        }
+
+        textureNbrJoueurs = SDL_CreateTextureFromSurface(renderer, imageNbrJoueurs);
+        SDL_FreeSurface(imageNbrJoueurs);
+
+        if(textureNbrJoueurs == NULL){
+          SDL_DestroyTexture(textureNbrJoueurs);
+          SDL_ExitWithError("Creation texture start echouee",renderer,window);
+        }
+
+        SDL_Rect emplacementNbrJoueurs;
+
+        if(SDL_QueryTexture(textureNbrJoueurs,NULL,NULL,&emplacementNbrJoueurs.w,&emplacementNbrJoueurs.h) != 0){
+          SDL_DestroyTexture(textureNbrJoueurs);
+          SDL_ExitWithError("Chargement en memoire start checkbox ",renderer,window);
+        }
+
+        emplacementNbrJoueurs.x =  (fenetre.w - emplacementNbrJoueurs.w)/2 + 16;
+        emplacementNbrJoueurs.y = 150;
+
+        SDL_RenderCopy(renderer,textureNbrJoueurs,NULL,&emplacementNbrJoueurs);
+        SDL_DestroyTexture(textureNbrJoueurs);
+
+        // Gestion nombre de nbrJoueurs
+
+        if (coordClic.y >= 150 && coordClic.y <= 250) {
+            if(coordClic.x >= (fenetre.w- 532)/2 && coordClic.x <= (fenetre.w- 532)/2 + 100 && (param_partie->joueurs > 1))
+              param_partie->joueurs--;
+
+            if(coordClic.x >= (fenetre.w + 500)/2 - 100 && coordClic.x <= (fenetre.w + 500)/2 && (param_partie->joueurs < 4 ))
+              param_partie->joueurs++;
+        }
+
+        // Affichage nombre d'ordinateurs
+        SDL_Surface *imageNbrOrdis = NULL;
+        SDL_Texture *textureNbrOrdis = NULL;
+
+        imageNbrOrdis = SDL_LoadBMP("./../img/menu_secondaire/nbrOrdis.bmp");
+
+        if(imageNbrOrdis == NULL){
+          SDL_FreeSurface(imageNbrOrdis);
+          SDL_ExitWithError("Creation image start echouee",renderer,window);
+        }
+
+        textureNbrOrdis = SDL_CreateTextureFromSurface(renderer, imageNbrOrdis);
+        SDL_FreeSurface(imageNbrOrdis);
+
+        if(textureNbrOrdis == NULL){
+          SDL_DestroyTexture(textureNbrOrdis);
+          SDL_ExitWithError("Creation texture start echouee",renderer,window);
+        }
+
+        SDL_Rect emplacementNbrOrdis;
+
+        if(SDL_QueryTexture(textureNbrOrdis,NULL,NULL,&emplacementNbrOrdis.w,&emplacementNbrOrdis.h) != 0){
+          SDL_DestroyTexture(textureNbrOrdis);
+          SDL_ExitWithError("Chargement en memoire start checkbox ",renderer,window);
+        }
+
+        emplacementNbrOrdis.x =  (fenetre.w - emplacementNbrOrdis.w)/2 + 16;
+        emplacementNbrOrdis.y = 300;
+
+        SDL_RenderCopy(renderer,textureNbrOrdis,NULL,&emplacementNbrOrdis);
+        SDL_DestroyTexture(textureNbrOrdis);
+
+        // Gestion nombre d'ordinateurs
+
+        if (coordClic.y >= 300 && coordClic.y <= 400 && param_partie->joueurs + param_partie->ordis+1 <= 4) {
+            if(coordClic.x >= (fenetre.w- 532)/2 && coordClic.x <= (fenetre.w- 532)/2 + 100 && (param_partie->ordis > 0))
+              param_partie->ordis--;
+
+            if(coordClic.x >= (fenetre.w + 500)/2 - 100 && coordClic.x <= (fenetre.w + 500)/2 && (param_partie->ordis < 4 ))
+              param_partie->ordis++;
+        }
+
+        if(param_partie->ordis == 0 && param_partie->joueurs == 1)
+          param_partie->ordis = 1;
+
+        if(param_partie->joueurs + param_partie->ordis > 4)
+          param_partie->ordis = abs( 4 - param_partie->joueurs );
+
+        // Affichage des valeurs joueurs et ordinateurs
+
+        for (int i = 0; i<2; i++){
+
+          SDL_Surface *imageValeur = NULL;
+          SDL_Texture *textureValeur = NULL;
+
+          char nomDuFichier[500];
+        if (i == 0)
+          sprintf(nomDuFichier,"./../img/menu_secondaire/%d.bmp",param_partie->joueurs);
+        else
+          sprintf(nomDuFichier,"./../img/menu_secondaire/%d.bmp",param_partie->ordis);
+
+          imageValeur = SDL_LoadBMP(nomDuFichier);
+          if(imageValeur == NULL){
+            SDL_FreeSurface(imageValeur);
+            SDL_ExitWithError("Creation image_bouton echouee",renderer,window);
           }
 
-        // Mise à jour des checkbox
-        if (coordClic.x >= (fenetre.w - 30)/2 - 450 && coordClic.x <= (fenetre.w - 30)/2 - 420){
-        for (int i = 0; i < 4; i++) {
-              if (coordClic.y >= 160 + i * 60 && coordClic.y <= 190 + i * 60){
-                if(tab[i].joue == true)
-                  tab[i].joue = false;
-                else
-                  tab[i].joue = true;
-              }
-            }
+          textureValeur = SDL_CreateTextureFromSurface(renderer, imageValeur);
+          SDL_FreeSurface(imageValeur);
+
+          if(textureValeur == NULL){
+            SDL_DestroyTexture(textureValeur);
+            SDL_ExitWithError("Creation texture_bouton echouee",renderer,window);
           }
 
-        /* ----- checkbox -----*/
-        // Affichage des boutons
-        for ( int i = 0; i < 4; i++) {
-            char nomDuFichier1[500];
-            char nomDuFichier2[500];
+          SDL_Rect emplacementValeur;
 
-            sprintf(nomDuFichier1,"./../img/menu_secondaire/humain_%d.bmp",tab[i].humain);
-            sprintf(nomDuFichier2,"./../img/menu_secondaire/ia_%d.bmp",!tab[i].humain);
-
-            SDL_Surface *imageHumain = NULL;
-            SDL_Texture *textureHumain = NULL;
-            SDL_Surface *imageIA = NULL;
-            SDL_Texture *textureIA = NULL;
-
-            imageHumain = SDL_LoadBMP(nomDuFichier1);
-            imageIA = SDL_LoadBMP(nomDuFichier2);
-
-            if(imageHumain == NULL){
-              SDL_FreeSurface(imageHumain);
-              SDL_ExitWithError("Creation image humain bouton echouee",renderer,window);
-            }
-
-            if(imageIA == NULL){
-              SDL_FreeSurface(imageIA);
-              SDL_ExitWithError("Creation image ia bouton echouee",renderer,window);
-            }
-
-            textureHumain = SDL_CreateTextureFromSurface(renderer, imageHumain);
-            SDL_FreeSurface(imageHumain);
-
-            textureIA = SDL_CreateTextureFromSurface(renderer, imageIA);
-            SDL_FreeSurface(imageIA);
-
-            if(textureHumain == NULL){
-              SDL_DestroyTexture(textureHumain);
-              SDL_ExitWithError("Creation texture humain bouton echouee",renderer,window);
-            }
-
-            if(textureIA == NULL){
-              SDL_DestroyTexture(textureIA);
-              SDL_ExitWithError("Creation texture ia bouton echouee",renderer,window);
-            }
-
-            SDL_Rect emplacementHumain;
-            SDL_Rect emplacementIA;
-
-            if(SDL_QueryTexture(textureHumain,NULL,NULL,&emplacementHumain.w,&emplacementHumain.h) != 0){
-              SDL_DestroyTexture(textureHumain);
-              SDL_ExitWithError("Chargement en memoire texture humain bouton ",renderer,window);
-            }
-
-            if(SDL_QueryTexture(textureIA,NULL,NULL,&emplacementIA.w,&emplacementIA.h) != 0){
-              SDL_DestroyTexture(textureIA);
-              SDL_ExitWithError("Chargement en memoire texture ia bouton ",renderer,window);
-            }
-
-            emplacementHumain.x =  (fenetre.w - emplacementHumain.w)/2;
-            emplacementHumain.y = 150 + i * 60;
-
-            emplacementIA.x =  (fenetre.w - emplacementIA.w)/2 + 130;
-            emplacementIA.y = 150 + i * 60;
-
-            SDL_RenderCopy(renderer,textureHumain,NULL,&emplacementHumain);
-            SDL_DestroyTexture(textureHumain);
-
-            SDL_RenderCopy(renderer,textureIA,NULL,&emplacementIA);
-            SDL_DestroyTexture(textureIA);
-
+          if(SDL_QueryTexture(textureValeur,NULL,NULL,&emplacementValeur.w,&emplacementValeur.h) != 0){
+            SDL_DestroyTexture(textureValeur);
+            SDL_ExitWithError("Chargement en memoire texture_bouton",renderer,window);
           }
 
-        // Mise à jour des boutons
-        if (coordClic.x >= (fenetre.w - 120)/2  && coordClic.x <= (fenetre.w - 120)/2 + 120 ){
-        for (int i = 0; i < 4; i++) {
-              if (coordClic.y >= 150 + i * 60 && coordClic.y <= 200 + i * 60){
-                if(tab[i].humain == false)
-                  tab[i].humain = true;
-              }
-            }
-          }
+          emplacementValeur.x =  (fenetre.w - emplacementValeur.w) /2;
+          if (i == 0)
+            emplacementValeur.y = 160;
+          else
+            emplacementValeur.y = 310;
+          SDL_RenderCopy(renderer,textureValeur,NULL,&emplacementValeur);
+          SDL_DestroyTexture(textureValeur);
 
-          if (coordClic.x >= (fenetre.w - 120)/2  + 130 && coordClic.x <= (fenetre.w - 120)/2 + 250 ){
-          for (int i = 0; i < 4; i++) {
-                if (coordClic.y >= 150 + i * 60 && coordClic.y <= 200 + i * 60){
-                  if(tab[i].humain == true)
-                    tab[i].humain = false;
-
-                }
-              }
-            }
+        }
         /* Démarrage de la partie */
 
+        menu_bouton selection_hover = rien;
+        newSelection = jouer;
+
+
+        if (coordCurseur.x >= 465 && coordCurseur.x <= 815) {
+          if (coordCurseur.y >= 600 && coordCurseur.y <= 650)
+            selection_hover =  commencer;
+          else if(coordCurseur.y >= 675 && coordCurseur.y <= 725)
+            selection_hover = retour;
+          else
+            selection_hover = rien;
+        }
+        else{
+          selection_hover = rien;
+        }
+
+        if (coordClic.x >= 465 && coordClic.x <= 815) {
+          if (coordClic.y >= 600 && coordClic.y <= 650)
+            newSelection = commencer;
+          else if(coordCurseur.y >= 675 && coordClic.y <= 725)
+            newSelection = rien;
+        }
+
         // Création du bouton de démarrage
-        SDL_Surface *imageStart = NULL;
-        SDL_Texture *textureStart = NULL;
 
-        imageStart = SDL_LoadBMP("./../img/menu_secondaire/commencer.bmp");
 
-        if(imageStart == NULL){
-          SDL_FreeSurface(imageStart);
-          SDL_ExitWithError("Creation image checkbox echouee",renderer,window);
+        char *nom_bouton[] ={"commencer", "retour"};
+
+
+        for (int i = 0; i < 2; i++) {
+
+        SDL_Surface *imageBouton = NULL;
+        SDL_Texture *textureBouton = NULL;
+
+        int j = 0;
+
+        char nomDuFichier[500];
+        if (i+4 == selection_hover)
+           j = 1;
+
+        sprintf(nomDuFichier,"./../img/menu_secondaire/%s_%d.bmp",nom_bouton[i],j);
+
+        imageBouton = SDL_LoadBMP(nomDuFichier);
+        if(imageBouton == NULL){
+          SDL_FreeSurface(imageBouton);
+          SDL_ExitWithError("Creation image_bouton echouee",renderer,window);
         }
 
-        textureStart = SDL_CreateTextureFromSurface(renderer, imageStart);
-        SDL_FreeSurface(imageStart);
+        textureBouton = SDL_CreateTextureFromSurface(renderer, imageBouton);
+        SDL_FreeSurface(imageBouton);
 
-        if(textureStart == NULL){
-          SDL_DestroyTexture(textureStart);
-          SDL_ExitWithError("Creation texture checkbox echouee",renderer,window);
+        if(textureBouton == NULL){
+          SDL_DestroyTexture(textureBouton);
+          SDL_ExitWithError("Creation texture_bouton echouee",renderer,window);
         }
 
-        SDL_Rect emplacementStart;
+        SDL_Rect emplacementBouton;
 
-        if(SDL_QueryTexture(textureStart,NULL,NULL,&emplacementStart.w,&emplacementStart.h) != 0){
-          SDL_DestroyTexture(textureStart);
-          SDL_ExitWithError("Chargement en memoire texture checkbox ",renderer,window);
+        if(SDL_QueryTexture(textureBouton,NULL,NULL,&emplacementBouton.w,&emplacementBouton.h) != 0){
+          SDL_DestroyTexture(textureBouton);
+          SDL_ExitWithError("Chargement en memoire texture_bouton",renderer,window);
         }
 
-        emplacementStart.x =  (fenetre.w - emplacementStart.w)/2  + 30;
-        emplacementStart.y = 500;
+        emplacementBouton.x =  (fenetre.w - emplacementBouton.w) /2;
+        emplacementBouton.y = 600 + i*75;
 
-        SDL_RenderCopy(renderer,textureStart,NULL,&emplacementStart);
-        SDL_DestroyTexture(textureStart);
+        SDL_RenderCopy(renderer,textureBouton,NULL,&emplacementBouton);
+        SDL_DestroyTexture(textureBouton);
+      }
 
-        // Mise à jour du bouton de démarrage
 
-        if (coordClic.x >= (fenetre.w - 500)/2  +30 && coordClic.x <= (fenetre.w - 500)/2 + 530  && coordClic.y >= 500 && coordClic.y <= 700)
-          loc = inGame;
 
 
     break;
-
+  }
     default:
     break;
   }
 
-  return loc;
+  return newSelection;
 
 }
 

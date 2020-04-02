@@ -35,6 +35,8 @@ typedef enum menu_bouton{
   regles,
   options,
   quitter,
+  commencer,
+  retour,
   rien
 
 }menu_bouton;
@@ -60,10 +62,10 @@ typedef struct cell{
   int pion;
 }cell;
 
-typedef struct joueur{
-  bool joue;
-  bool humain;
-}joueur;
+typedef struct partie{
+  int joueurs;
+  int ordis;
+}partie, *game;
 
 /* Prototype des fonctions */
 void initTab(cell tab[10][10]);
@@ -74,11 +76,11 @@ void afficherCurseur(curseur monCurseur, SDL_Renderer *renderer);
 void detruireCurseur(curseur monCurseur);
 
 void creationBackground(SDL_Renderer *renderer, SDL_Rect fenetre);
-void initTabJoueur(joueur tab[4]);
+void initPartie(game param_partie);
 
-location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_Rect plateau, joueur tableauJoueurs[4]);
+location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_Rect plateau, game param_partie);
 menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect fenetre, coord coordCurseur, coord coordClic);
-location menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect fenetre, menu_bouton selection, coord coordCurseur, coord coordClic, joueur tab[4]);
+menu_bouton menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect fenetre, menu_bouton selection, coord coordCurseur, coord coordClic, game para);
 location jeu(SDL_Rect plateau,SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,cell tab[10][10]);
 void creationFond(SDL_Renderer *renderer,SDL_Rect plateau,SDL_Rect fenetre,SDL_Texture *textureDamier);
 void generatePion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10]);
