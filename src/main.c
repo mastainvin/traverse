@@ -27,11 +27,6 @@ int main(void){
     fenetre.w = 1280;
 
     // Taille du plateau
-    SDL_Rect plateau;
-    plateau.h = 500;
-    plateau.w = 500;
-    plateau.x = (fenetre.w-plateau.w)/2; // Placer au mileu
-    plateau.y = (fenetre.h-plateau.h)/2; // Placer au milieu
 
     /* ------------------------- */
 
@@ -52,6 +47,8 @@ int main(void){
     if(SDL_CreateWindowAndRenderer(fenetre.w,fenetre.h,SDL_WINDOW_FULLSCREEN,&window,&renderer) != 0)
       SDL_ExitWithError("Creation fenetre et rendu echouee",renderer,window);
 
+    if(TTF_Init() != 0)
+      SDL_ExitWithError("Chargement de ttf",renderer,window);
 
     //SDL_GetWindowSize(window,&fenetre.w,&fenetre.h);
 
@@ -63,10 +60,10 @@ int main(void){
     while (loc != quit) {
       switch (loc) {
         case inGame:
-          loc = jeu(plateau,fenetre,window,renderer,tab);
+          loc = jeu(fenetre,window,renderer,tab);
         break;
         case inMenu:
-          loc = menu(fenetre,window,renderer, plateau, param_partie);
+          loc = menu(fenetre,window,renderer, param_partie);
         break;
         default:
           SDL_ExitWithError("ERREUR : localisation utilisation", renderer, window);
@@ -76,6 +73,7 @@ int main(void){
 
     SDL_DestroyRenderer(renderer);
     SDL_DestroyWindow(window);
+    TTF_Quit();
     SDL_Quit();
 
     return 0;

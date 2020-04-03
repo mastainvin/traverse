@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
+#include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL2_rotozoom.h>
 
 #include <time.h>
@@ -22,6 +23,7 @@ void SDL_ExitWithError(const char *message, SDL_Renderer *renderer, SDL_Window *
   SDL_Log("ERREUR : %s > %s\n", message,SDL_GetError());
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
+  TTF_Quit();
   SDL_Quit();
   exit(EXIT_FAILURE);
 }
@@ -75,29 +77,127 @@ void initPartie(game param_partie){
   param_partie->joueurs = 1;
   param_partie->ordis = 1;
 }
-void creationFond(SDL_Renderer *renderer,SDL_Rect plateau,SDL_Rect fenetre,SDL_Texture *textureDamier){
+SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre,coord coordClic, coord coordCurseur, bool *inPause){
 
 
-  SDL_Rect damierShadow;
-  damierShadow.x = plateau.x - 21;
-  damierShadow.y = plateau.y - 21;
-  damierShadow.w = plateau.w + 42;
-  damierShadow.h = plateau.h + 42;
-
-  SDL_SetRenderDrawColor(renderer,0,0,0,1);
-  SDL_RenderDrawRect(renderer,&damierShadow);
-
-  SDL_Rect contour;
-  contour.x = plateau.x - 20;
-  contour.y = plateau.y - 20;
-  contour.w = plateau.w + 40;
-  contour.h = plateau.h + 40;
-
-  SDL_SetRenderDrawColor(renderer,206,206,206,255);
-  SDL_RenderFillRect(renderer,&contour);
+  SDL_Surface *imageDamier = NULL;
+  SDL_Texture *textureDamier = NULL;
 
 
-  SDL_RenderCopy(renderer,textureDamier,NULL,&plateau);
+  imageDamier= SDL_LoadBMP("./../img/damier.bmp");
+  if(imageDamier == NULL){
+    SDL_FreeSurface(imageDamier);
+    SDL_ExitWithError("Creation imageDamier echouee",renderer,window);
+  }
+
+  textureDamier = SDL_CreateTextureFromSurface(renderer, imageDamier);
+  SDL_FreeSurface(imageDamier);
+
+  if(textureDamier == NULL){
+    SDL_DestroyTexture(textureDamier);
+    SDL_ExitWithError("Creation texture echouee",renderer,window);
+  }
+
+
+  SDL_Rect positionDamier;
+
+
+  if(SDL_QueryTexture(textureDamier,NULL,NULL,&positionDamier.w,&positionDamier.h) != 0){
+    SDL_DestroyTexture(textureDamier);
+    SDL_ExitWithError("Chargement en memoire texture",renderer,window);
+  }
+
+
+  positionDamier.x = (fenetre.w - positionDamier.w)/2 ;
+  positionDamier.y = (fenetre.h - positionDamier.h)/2 ;
+
+  SDL_RenderCopy(renderer,textureDamier,NULL,&positionDamier);
+  SDL_DestroyTexture(textureDamier);
+
+  SDL_Surface *imageDamierFond = NULL;
+  SDL_Texture *textureDamierFond = NULL;
+
+
+  imageDamierFond= SDL_LoadBMP("./../img/damier_fond.bmp");
+  if(imageDamierFond == NULL){
+    SDL_FreeSurface(imageDamierFond);
+    SDL_ExitWithError("Creation imageDamier echouee",renderer,window);
+  }
+
+  textureDamierFond = SDL_CreateTextureFromSurface(renderer, imageDamierFond);
+  SDL_FreeSurface(imageDamierFond);
+
+  if(textureDamierFond == NULL){
+    SDL_DestroyTexture(textureDamierFond);
+    SDL_ExitWithError("Creation texture echouee",renderer,window);
+  }
+
+
+  SDL_Rect positionDamierFond;
+
+
+  if(SDL_QueryTexture(textureDamierFond,NULL,NULL,&positionDamierFond.w,&positionDamierFond.h) != 0){
+    SDL_DestroyTexture(textureDamierFond);
+    SDL_ExitWithError("Chargement en memoire texture",renderer,window);
+  }
+
+
+  positionDamierFond.x = (fenetre.w - positionDamierFond.w)/2 + 20;
+  positionDamierFond.y = (fenetre.h - positionDamierFond.h)/2 + 21;
+
+  SDL_RenderCopy(renderer,textureDamierFond,NULL,&positionDamierFond);
+  SDL_DestroyTexture(textureDamierFond);
+
+  //Création bouton Pause
+  menu_bouton selection_hover = rien;
+
+  if(!*inPause){
+    if (coordCurseur.x >= 465 && coordCurseur.x <= 815 && coordCurseur.y >= 700 && coordCurseur.y <= 750)
+      selection_hover = pause;
+
+    if (coordClic.x >= 465 && coordClic.x <= 815 && coordClic.y >= 700 && coordClic.y <= 750)
+      *inPause = true;
+  }
+  SDL_Surface *imageBouton = NULL;
+  SDL_Texture *textureBouton = NULL;
+
+  int j = 0;
+
+  char nomDuFichier[500];
+  if (pause == selection_hover)
+     j = 1;
+
+  sprintf(nomDuFichier,"./../img/jeu/pause_%d.bmp",j);
+
+  imageBouton = SDL_LoadBMP(nomDuFichier);
+  if(imageBouton == NULL){
+    SDL_FreeSurface(imageBouton);
+    SDL_ExitWithError("Creation image_bouton echouee",renderer,window);
+  }
+
+  textureBouton = SDL_CreateTextureFromSurface(renderer, imageBouton);
+  SDL_FreeSurface(imageBouton);
+
+  if(textureBouton == NULL){
+    SDL_DestroyTexture(textureBouton);
+    SDL_ExitWithError("Creation texture_bouton echouee",renderer,window);
+  }
+
+  SDL_Rect emplacementBouton;
+
+  if(SDL_QueryTexture(textureBouton,NULL,NULL,&emplacementBouton.w,&emplacementBouton.h) != 0){
+    SDL_DestroyTexture(textureBouton);
+    SDL_ExitWithError("Chargement en memoire texture_bouton",renderer,window);
+  }
+
+  emplacementBouton.x =  (fenetre.w - emplacementBouton.w) /2;
+  emplacementBouton.y = 700;
+
+  SDL_RenderCopy(renderer,textureBouton,NULL,&emplacementBouton);
+  SDL_DestroyTexture(textureBouton);
+
+
+  return positionDamier;
 }
 
 void generatePion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10]){
@@ -295,7 +395,7 @@ menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect f
   return selection;
 }
 
-location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_Rect plateau, game param_partie){
+location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, game param_partie){
 
   location loc = inMenu;
 
@@ -318,7 +418,6 @@ location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_
       SDL_Event  event;
 
 
-      limit_fps(frame_limit);
       SDL_RenderClear(renderer);
       creationBackground(renderer,fenetre);
 
@@ -330,6 +429,10 @@ location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_
         selection = menu_secondaire(renderer,window,fenetre, selection,coordMouse,coordClic, param_partie);
 
       afficherCurseur(monCurseur,renderer);
+      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
+      limit_fps(frame_limit,fenetre,window,renderer);
+      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
+
       SDL_RenderPresent(renderer);
 
       // Réinitalisation des coordonnées du clic pour évité boucles
@@ -360,7 +463,7 @@ location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, SDL_
             break;
           }
         }
-        frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
+
 
         if (selection == quitter)
           loc = quit;
@@ -487,7 +590,7 @@ menu_bouton newSelection = rien;
 
         // Gestion nombre d'ordinateurs
 
-        if (coordClic.y >= 300 && coordClic.y <= 400 && param_partie->joueurs + param_partie->ordis+1 <= 4) {
+        if (coordClic.y >= 300 && coordClic.y <= 400 ) {
             if(coordClic.x >= (fenetre.w- 532)/2 && coordClic.x <= (fenetre.w- 532)/2 + 100 && (param_partie->ordis > 0))
               param_partie->ordis--;
 
@@ -583,7 +686,7 @@ menu_bouton newSelection = rien;
         int j = 0;
 
         char nomDuFichier[500];
-        if (i+4 == selection_hover)
+        if (i+6 == selection_hover)
            j = 1;
 
         sprintf(nomDuFichier,"./../img/menu_secondaire/%s_%d.bmp",nom_bouton[i],j);
@@ -629,95 +732,172 @@ menu_bouton newSelection = rien;
 
 }
 
-location jeu(SDL_Rect plateau,SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,cell tab[10][10]){
+location jeu(SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,cell tab[10][10]){
 
   location loc= inGame;
   curseur monCurseur = creerCurseur(renderer,window);
-  SDL_Surface *imageDamier = NULL;
-  SDL_Texture *textureDamier = NULL;
+  bool inPause = false;
 
   coordInt selectedBox;
   selectedBox.x = -1;
   selectedBox.y = -1;
 
-  imageDamier= IMG_Load("./../img/damier 500X500.png");
-  if(imageDamier == NULL){
-    SDL_FreeSurface(imageDamier);
-    SDL_ExitWithError("Creation imageDamier echouee",renderer,window);
-  }
+  coord coordClic;
+  coord coordCurseur;
 
-  textureDamier = SDL_CreateTextureFromSurface(renderer, imageDamier);
-  SDL_FreeSurface(imageDamier);
-
-  if(textureDamier == NULL){
-    SDL_DestroyTexture(textureDamier);
-    SDL_ExitWithError("Creation texture echouee",renderer,window);
-  }
-
-
-  if(SDL_QueryTexture(textureDamier,NULL,NULL,&plateau.w,&plateau.h) != 0){
-    SDL_DestroyTexture(textureDamier);
-    SDL_ExitWithError("Chargement en memoire texture",renderer,window);
-  }
+  SDL_Rect plateau;
 
   SDL_bool program_launched = SDL_TRUE;
 
   unsigned int frame_limit = 0;
 
-  frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
 
   while(program_launched) {
       SDL_Event event;
-
+      coordClic.x = 0;
+      coordClic.x = 0;
       while(SDL_PollEvent(&event)) {
           switch (event.type) {
             case SDL_QUIT:
               loc = quit;
-              program_launched = SDL_FALSE;
               break;
             case SDL_KEYDOWN:
               if (event.key.keysym.sym == SDLK_ESCAPE)
-                loc = quit;
-                program_launched = SDL_FALSE;
+                inPause = !inPause;
+
               break;
             case SDL_MOUSEBUTTONDOWN:
-              if(selectedBox.x < 0 || selectedBox.y < 0){
-                selectedBox = selectionPion(tab,event.button.x,event.button.y, plateau);
+              if(!inPause){
+                if(selectedBox.x < 0 || selectedBox.y < 0){
+                  selectedBox = selectionPion(tab,event.button.x,event.button.y, plateau);
 
+                }
+                  else {
+                  selectionMove(tab,event.button.x,event.button.y, plateau, &selectedBox);
+                  selectedBox.x = -1;
+                  selectedBox.y = -1;
+                }
               }
-                else {
-                selectionMove(tab,event.button.x,event.button.y, plateau, &selectedBox);
-                selectedBox.x = -1;
-                selectedBox.y = -1;
-              }
+              coordClic.x = event.button.x;
+              coordClic.y = event.button.y;
               break;
             case SDL_MOUSEMOTION:
               monCurseur.position.x = event.motion.x;
               monCurseur.position.y = event.motion.y;
+              coordCurseur.x = monCurseur.position.x;
+              coordCurseur.y = monCurseur.position.y;
+
             break;
             default:
               break;
           }
         }
-      limit_fps(frame_limit);
       // Clear screen
       SDL_RenderClear(renderer);
       // Draw
       creationBackground(renderer,fenetre);
-      creationFond(renderer,plateau,fenetre,textureDamier);
+      plateau = creationFond(renderer,window,fenetre,coordClic,coordCurseur, &inPause);
       generatePion(window,renderer,plateau,tab);
+      if(inPause){
+        SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+        SDL_RenderFillRect(renderer, NULL);
+        SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+        loc = menu_pause(renderer,window,fenetre, coordCurseur,coordClic, &inPause);
+      }
+
       afficherCurseur(monCurseur,renderer);
       // Show what was drawn
-      SDL_RenderPresent(renderer);
       frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
+      limit_fps(frame_limit,fenetre,window,renderer);
+      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
+
+      SDL_RenderPresent(renderer);
+
+      if(loc != inGame)
+        program_launched = SDL_FALSE;
 
   }
   detruireCurseur(monCurseur);
-  SDL_DestroyTexture(textureDamier);
   return loc;
 }
 
-void limit_fps(unsigned int limit){
+
+location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect fenetre,coord coordCurseur, coord coordClic, bool *inPause){
+
+  menu_bouton selection_hover = rien;
+  location loc = inGame;
+  if (coordCurseur.x >= 465 && coordCurseur.x <= 815) {
+    if (coordCurseur.y >= 400 && coordCurseur.y <= 450)
+      selection_hover = quitter;
+    else if(coordCurseur.y >= 325 && coordCurseur.y <= 375)
+      selection_hover = sauvegarder;
+    else if (coordCurseur.y >= 250 && coordCurseur.y <= 300)
+      selection_hover = continuer;
+    else
+      selection_hover = rien;
+  }
+  else{
+    selection_hover = rien;
+  }
+  if (coordClic.x >= 465 && coordClic.x <= 815) {
+    if (coordClic.y >= 400 && coordClic.y <= 450)
+      loc = inMenu;
+    //else if(coordClic.y >= 325 && coordClic.y <= 375)
+
+    else if (coordClic.y >= 250 && coordClic.y <= 300)
+      *inPause = false;
+
+  }
+
+  char *nom_bouton[] ={"quitter","sauvegarder","continuer"};
+
+  for (int i = 0; i < 3; i++) {
+
+  SDL_Surface *imageBouton = NULL;
+  SDL_Texture *textureBouton = NULL;
+
+  int j = 0;
+
+  char nomDuFichier[500];
+  if (i+3 == selection_hover)
+     j = 1;
+
+  sprintf(nomDuFichier,"./../img/jeu/%s_%d.bmp",nom_bouton[i],j);
+
+  imageBouton = SDL_LoadBMP(nomDuFichier);
+  if(imageBouton == NULL){
+    SDL_FreeSurface(imageBouton);
+    SDL_ExitWithError("Creation image_bouton echouee",renderer,window);
+  }
+
+  textureBouton = SDL_CreateTextureFromSurface(renderer, imageBouton);
+  SDL_FreeSurface(imageBouton);
+
+  if(textureBouton == NULL){
+    SDL_DestroyTexture(textureBouton);
+    SDL_ExitWithError("Creation texture_bouton echouee",renderer,window);
+  }
+
+  SDL_Rect emplacementBouton;
+
+  if(SDL_QueryTexture(textureBouton,NULL,NULL,&emplacementBouton.w,&emplacementBouton.h) != 0){
+    SDL_DestroyTexture(textureBouton);
+    SDL_ExitWithError("Chargement en memoire texture_bouton",renderer,window);
+  }
+
+  emplacementBouton.x =  (fenetre.w - emplacementBouton.w) /2;
+  emplacementBouton.y = 400 - i*75;
+
+  SDL_RenderCopy(renderer,textureBouton,NULL,&emplacementBouton);
+  SDL_DestroyTexture(textureBouton);
+}
+
+
+  return loc;
+
+}
+void limit_fps(unsigned int limit, SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer){
   unsigned int tick = SDL_GetTicks();
 
   if(limit < tick)
@@ -726,5 +906,29 @@ void limit_fps(unsigned int limit){
     SDL_Delay(16);
   else
     SDL_Delay(limit - tick);
+
+  SDL_Surface *surfaceFPS = NULL;
+  SDL_Texture *textureFPS = NULL;
+
+  TTF_Font *font = TTF_OpenFont("arial.ttf", 25);
+
+  SDL_Color white = {255,255,255};
+  char fps_text[3];
+
+  sprintf(fps_text,"%d",1000/(limit-tick));
+
+  surfaceFPS = TTF_RenderText_Solid(font,fps_text,white);
+  textureFPS = SDL_CreateTextureFromSurface(renderer, surfaceFPS);
+  SDL_FreeSurface(surfaceFPS);
+
+  SDL_Rect positionFPS;
+  SDL_QueryTexture(textureFPS,NULL,NULL,&positionFPS.w, &positionFPS.h);
+
+  positionFPS.x = fenetre.w - positionFPS.w - 5;
+  positionFPS.y = 5;
+
+  SDL_RenderCopy(renderer, textureFPS, NULL, &positionFPS);
+  TTF_CloseFont(font);
+  SDL_DestroyTexture(textureFPS);
 
 }
