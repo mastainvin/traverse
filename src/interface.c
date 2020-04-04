@@ -1,4 +1,5 @@
 #include "interface.h"
+#include "FonctionsDuJeu.h"
 #include <stdio.h>
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -9,14 +10,7 @@
 #include <math.h>
 
 
-void initTab(cell tab[10][10]){
-  for (int i = 0; i < 10; i++) {
-    for (int j = 0; j < 10; j++) {
-      tab[i][j].joueur = 0;
-      tab[i][j].pion = 0;
-    }
-  }
-}
+
 
 // Fonction de retour d'erreur permet fermeture propre de la fenêtre
 void SDL_ExitWithError(const char *message, SDL_Renderer *renderer, SDL_Window *window){
@@ -77,7 +71,7 @@ void initPartie(game param_partie){
   param_partie->joueurs = 1;
   param_partie->ordis = 1;
 }
-SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre,coord coordClic, coord coordCurseur, bool *inPause){
+SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre,coord coordClic, coord coordCurseur, bool *inPause, bool *inTurn){
 
 
   SDL_Surface *imageDamier = NULL;
@@ -149,25 +143,40 @@ SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre
   SDL_DestroyTexture(textureDamierFond);
 
   //Création bouton Pause
+
+  char *bouton_list[2] = {"pause", "finir"};
   menu_bouton selection_hover = rien;
 
   if(!*inPause){
-    if (coordCurseur.x >= 465 && coordCurseur.x <= 815 && coordCurseur.y >= 700 && coordCurseur.y <= 750)
+    if (coordCurseur.x >= 465 && coordCurseur.x <= 815 && coordCurseur.y >= 740 && coordCurseur.y <= 790)
       selection_hover = pause;
 
-    if (coordClic.x >= 465 && coordClic.x <= 815 && coordClic.y >= 700 && coordClic.y <= 750)
+    if (coordClic.x >= 465 && coordClic.x <= 815 && coordClic.y >= 740 && coordClic.y <= 790)
       *inPause = true;
+
+    if(*inTurn == true){
+      if (coordCurseur.x >= 465 && coordCurseur.x <= 815 && coordCurseur.y >= 685 && coordCurseur.y <= 735)
+        selection_hover = finir;
+
+      if (coordClic.x >= 465 && coordClic.x <= 815 && coordClic.y >= 685 && coordClic.y <= 735)
+        *inTurn = false;
+    }
   }
+
+
+  for(int i = 0; i < 2; i++){
+  if(i == 0 || *inTurn == true){
+
   SDL_Surface *imageBouton = NULL;
   SDL_Texture *textureBouton = NULL;
 
   int j = 0;
 
   char nomDuFichier[500];
-  if (pause == selection_hover)
+  if (i+8 == selection_hover)
      j = 1;
 
-  sprintf(nomDuFichier,"./../img/jeu/pause_%d.bmp",j);
+  sprintf(nomDuFichier,"./../img/jeu/%s_%d.bmp",bouton_list[i],j);
 
   imageBouton = SDL_LoadBMP(nomDuFichier);
   if(imageBouton == NULL){
@@ -191,10 +200,15 @@ SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre
   }
 
   emplacementBouton.x =  (fenetre.w - emplacementBouton.w) /2;
-  emplacementBouton.y = 700;
+  emplacementBouton.y = 740 - i*55;
 
   SDL_RenderCopy(renderer,textureBouton,NULL,&emplacementBouton);
   SDL_DestroyTexture(textureBouton);
+}
+}
+
+
+
 
 
   return positionDamier;
@@ -214,9 +228,9 @@ void afficherPion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,in
   SDL_Texture *texturePion = NULL;
 
   char nomDuFichier[500];
-  sprintf(nomDuFichier,"./../img/%d_joueur%d.png",pion,joueur);
+  sprintf(nomDuFichier,"./../img/jeu/%d_joueur%d.bmp",pion,joueur);
 
-  imagePion = IMG_Load(nomDuFichier);
+  imagePion = SDL_LoadBMP(nomDuFichier);
 
   if(imagePion == NULL){
     SDL_FreeSurface(imagePion);
@@ -249,6 +263,7 @@ coordInt selectionPion(cell tab[10][10], float x, float y, SDL_Rect plateau){
   coordInt selectedPion;
   selectedPion.x = -1;
   selectedPion.y = -1;
+
   if(x >= plateau.x && x < plateau.x + plateau.w && y >= plateau.y && y < plateau.x + plateau.h){
     int i,j;
     i = floor((x - plateau.x)/50);
@@ -262,20 +277,22 @@ coordInt selectionPion(cell tab[10][10], float x, float y, SDL_Rect plateau){
   return selectedPion;
 }
 
-void selectionMove(cell tab[10][10], float x, float y, SDL_Rect plateau, coordInt *movedPion){
+coordInt selectionMove(cell tab[10][10], float x, float y, SDL_Rect plateau){
+
+  coordInt selectedPion;
+  selectedPion.x = -1;
+  selectedPion.y = -1;
 
   if(x >= plateau.x && x < plateau.x + plateau.w && y >= plateau.y && y < plateau.x + plateau.h){
     int i,j;
     i = floor((x - plateau.x )/50);
     j = floor((y - plateau.y)/50);
     if(tab[i][j].joueur == 0){
-
-      tab[i][j].joueur = tab[movedPion->x][movedPion->y].joueur;
-      tab[i][j].pion = tab[movedPion->x][movedPion->y].pion;
-      tab[movedPion->x][movedPion->y].joueur = 0;
-      tab[movedPion->x][movedPion->y].pion = 0;
+      selectedPion.x = i;
+      selectedPion.y = j;
     }
   }
+  return selectedPion;
 }
 
 menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect fenetre, coord coordCurseur, coord coordClic){
@@ -396,6 +413,8 @@ menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect f
 }
 
 location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, game param_partie){
+
+  initPartie(param_partie);
 
   location loc = inMenu;
 
@@ -732,16 +751,23 @@ menu_bouton newSelection = rien;
 
 }
 
-location jeu(SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,cell tab[10][10]){
+location jeu(SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,game param_partie){
 
   location loc= inGame;
   curseur monCurseur = creerCurseur(renderer,window);
   bool inPause = false;
+  bool inTurn = false;
+  bool restriction[8];
+  initialisationTabRest(restriction);
+  cell tab[10][10];
+  initialisationTab(tab,param_partie->joueurs + param_partie->ordis);
 
   coordInt selectedBox;
   selectedBox.x = -1;
   selectedBox.y = -1;
 
+  bool selected = false;
+  int player = 1;
   coord coordClic;
   coord coordCurseur;
 
@@ -755,7 +781,7 @@ location jeu(SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,cell ta
   while(program_launched) {
       SDL_Event event;
       coordClic.x = 0;
-      coordClic.x = 0;
+      coordClic.y = 0;
       while(SDL_PollEvent(&event)) {
           switch (event.type) {
             case SDL_QUIT:
@@ -767,17 +793,6 @@ location jeu(SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,cell ta
 
               break;
             case SDL_MOUSEBUTTONDOWN:
-              if(!inPause){
-                if(selectedBox.x < 0 || selectedBox.y < 0){
-                  selectedBox = selectionPion(tab,event.button.x,event.button.y, plateau);
-
-                }
-                  else {
-                  selectionMove(tab,event.button.x,event.button.y, plateau, &selectedBox);
-                  selectedBox.x = -1;
-                  selectedBox.y = -1;
-                }
-              }
               coordClic.x = event.button.x;
               coordClic.y = event.button.y;
               break;
@@ -792,12 +807,13 @@ location jeu(SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,cell ta
               break;
           }
         }
-      // Clear screen
+
       SDL_RenderClear(renderer);
-      // Draw
+      Tour2Joueurs(tab,coordClic.x,coordClic.y,plateau, &selectedBox, &selected, &player, &inTurn);
       creationBackground(renderer,fenetre);
-      plateau = creationFond(renderer,window,fenetre,coordClic,coordCurseur, &inPause);
+      plateau = creationFond(renderer,window,fenetre,coordClic,coordCurseur, &inPause, &inTurn);
       generatePion(window,renderer,plateau,tab);
+
       if(inPause){
         SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);
         SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
@@ -807,7 +823,7 @@ location jeu(SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,cell ta
       }
 
       afficherCurseur(monCurseur,renderer);
-      // Show what was drawn
+
       frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
       limit_fps(frame_limit,fenetre,window,renderer);
       frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;

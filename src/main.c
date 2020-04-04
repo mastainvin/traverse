@@ -3,6 +3,7 @@
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 #include "interface.h"
+#include "FonctionsDuJeu.h"
 #include <time.h>
 
 
@@ -10,13 +11,7 @@
 int main(void){
 
     /*  Tableau de tests */
-    cell tab[10][10];
-    initTab(tab);
-    tab[1][2].joueur = 1;
-    tab[1][2].pion = 4;
 
-    tab[4][4].joueur = 2;
-    tab[4][4].pion = 4;
     /* ------------------------- */
 
     /* Création des variables d'affichage celles-ci pourront être modifiés dans le programme*/
@@ -32,7 +27,7 @@ int main(void){
 
     partie *param_partie;
     param_partie = malloc(sizeof(*param_partie));
-    initPartie(param_partie);
+
 
     /*SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 16);
@@ -60,7 +55,7 @@ int main(void){
     while (loc != quit) {
       switch (loc) {
         case inGame:
-          loc = jeu(fenetre,window,renderer,tab);
+          loc = jeu(fenetre,window,renderer,param_partie);
         break;
         case inMenu:
           loc = menu(fenetre,window,renderer, param_partie);
