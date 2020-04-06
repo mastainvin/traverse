@@ -10,7 +10,7 @@
 #include "FonctionsDuJeu.h"
 
 #define FRAME_PER_SECOND 33
-
+#define CENTER 99999
 /* Structures */
 
 typedef enum location{
@@ -59,19 +59,20 @@ curseur creerCurseur(SDL_Renderer *renderer, SDL_Window *window);
 void afficherCurseur(curseur monCurseur, SDL_Renderer *renderer);
 void detruireCurseur(curseur monCurseur);
 
-void creationBackground(SDL_Renderer *renderer, SDL_Rect fenetre);
+void creationBackground(SDL_Renderer *renderer, SDL_Rect *fenetre);
 void initPartie(game param_partie);
 
-location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, game param_partie);
-menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect fenetre, coord coordCurseur, coord coordClic);
-menu_bouton menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect fenetre, menu_bouton selection, coord coordCurseur, coord coordClic, game para);
-location jeu(SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,game param_partie);
-SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre,coord coordClic, coord coordCurseur, bool *pause, bool *inTurn, int player);
+location menu(SDL_Rect *fenetre, SDL_Window *window, SDL_Renderer *renderer, game param_partie);
+menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect *fenetre, coord coordCurseur, coord coordClic);
+menu_bouton menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre, menu_bouton selection, coord coordCurseur, coord coordClic, game param_partie);
+location jeu(SDL_Rect *fenetre,SDL_Window *window, SDL_Renderer *renderer,game param_partie);
+void creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect *fenetre,coord coordClic, coord coordCurseur, bool *inPause, playerMove *move);
 void generatePion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10]);
 void afficherPion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,int joueur,int pion,int x,int y);
 coordInt selectionPion(cell tab[10][10], float x, float y, SDL_Rect plateau);
 coordInt selectionMove(cell tab[10][10], float x, float y, SDL_Rect plateau);
-location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect fenetre,coord coordCurseur, coord coordClic, bool *inPause);
+location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre,coord coordCurseur, coord coordClic, bool *inPause);
+void afficherImage(char *lienImage,float x, float y, SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre);
 
-void limit_fps(unsigned int limit, SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer);
+void limit_fps(unsigned int limit, SDL_Rect *fenetre,SDL_Window *window, SDL_Renderer *renderer);
 #endif
