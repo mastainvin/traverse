@@ -11,11 +11,6 @@
 
 #define FRAME_PER_SECOND 33
 
-#define MENU_SEC_W 800
-#define MENU_SEC_H 400
-
-
-
 /* Structures */
 
 typedef enum location{
@@ -71,7 +66,7 @@ location menu(SDL_Rect fenetre, SDL_Window *window, SDL_Renderer *renderer, game
 menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect fenetre, coord coordCurseur, coord coordClic);
 menu_bouton menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect fenetre, menu_bouton selection, coord coordCurseur, coord coordClic, game para);
 location jeu(SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,game param_partie);
-SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre,coord coordClic, coord coordCurseur, bool *pause, bool *inTurn);
+SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre,coord coordClic, coord coordCurseur, bool *pause, bool *inTurn, int player);
 void generatePion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10]);
 void afficherPion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,int joueur,int pion,int x,int y);
 coordInt selectionPion(cell tab[10][10], float x, float y, SDL_Rect plateau);

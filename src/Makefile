@@ -9,7 +9,7 @@ all :$(EXEC)
 	$(CC) -o $@ -c $<
 
 $(EXEC): $(OBJ)
-	$(CC) -o $@ $^ -lSDL2 -lSDL2_Image -lSDL2_ttf
+	$(CC) -o $@ $^ -lSDL2 -lSDL2_Image -lSDL2_ttf -lm
 
 
 clean :

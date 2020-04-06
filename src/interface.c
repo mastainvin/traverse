@@ -71,7 +71,7 @@ void initPartie(game param_partie){
   param_partie->joueurs = 1;
   param_partie->ordis = 1;
 }
-SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre,coord coordClic, coord coordCurseur, bool *inPause, bool *inTurn){
+SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre,coord coordClic, coord coordCurseur, bool *inPause, bool *inTurn, int player){
 
 
   SDL_Surface *imageDamier = NULL;
@@ -207,6 +207,41 @@ SDL_Rect creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect fenetre
 }
 }
 
+SDL_Surface *imageJoueur = NULL;
+SDL_Texture *textureJoueur = NULL;
+
+char nomDuFichier[500];
+sprintf(nomDuFichier,"./../img/jeu/joueur_%d.bmp",player);
+
+imageJoueur = SDL_LoadBMP(nomDuFichier);
+if(imageJoueur == NULL){
+  SDL_FreeSurface(imageJoueur);
+  SDL_ExitWithError("Creation imageDamier echouee",renderer,window);
+}
+
+textureJoueur = SDL_CreateTextureFromSurface(renderer, imageJoueur);
+SDL_FreeSurface(imageJoueur);
+
+if(textureJoueur == NULL){
+  SDL_DestroyTexture(textureJoueur);
+  SDL_ExitWithError("Creation texture echouee",renderer,window);
+}
+
+
+SDL_Rect positionJoueur;
+
+
+if(SDL_QueryTexture(textureJoueur,NULL,NULL,&positionJoueur.w,&positionJoueur.h) != 0){
+  SDL_DestroyTexture(textureJoueur);
+  SDL_ExitWithError("Chargement en memoire texture",renderer,window);
+}
+
+
+positionJoueur.x = (fenetre.w - positionJoueur.w)/2 + 20;
+positionJoueur.y = 20;
+
+SDL_RenderCopy(renderer,textureJoueur,NULL,&positionJoueur);
+SDL_DestroyTexture(textureJoueur);
 
 
 
@@ -809,9 +844,9 @@ location jeu(SDL_Rect fenetre,SDL_Window *window, SDL_Renderer *renderer,game pa
         }
 
       SDL_RenderClear(renderer);
-      Tour2Joueurs(tab,coordClic.x,coordClic.y,plateau, &selectedBox, &selected, &player, &inTurn);
+      TourJoueurs(tab,param_partie,coordClic.x,coordClic.y,plateau, &selectedBox, &selected, &player, &inTurn, restriction);
       creationBackground(renderer,fenetre);
-      plateau = creationFond(renderer,window,fenetre,coordClic,coordCurseur, &inPause, &inTurn);
+      plateau = creationFond(renderer,window,fenetre,coordClic,coordCurseur, &inPause, &inTurn, player);
       generatePion(window,renderer,plateau,tab);
 
       if(inPause){

@@ -8,11 +8,10 @@
 
 
 
-int main(void){
+int main(int argc, char **argv){
 
-    /*  Tableau de tests */
 
-    /* ------------------------- */
+
 
     /* Création des variables d'affichage celles-ci pourront être modifiés dans le programme*/
 
@@ -39,8 +38,15 @@ int main(void){
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
       SDL_ExitWithError("Initialisation de la SDL",renderer,window);
 
-    if(SDL_CreateWindowAndRenderer(fenetre.w,fenetre.h,SDL_WINDOW_FULLSCREEN,&window,&renderer) != 0)
-      SDL_ExitWithError("Creation fenetre et rendu echouee",renderer,window);
+    if (argc == 2 && strcmp(argv[1]," fullscreen")){
+        if(SDL_CreateWindowAndRenderer(fenetre.w,fenetre.h,SDL_WINDOW_FULLSCREEN,&window,&renderer) != 0)
+          SDL_ExitWithError("Creation fenetre et rendu echouee",renderer,window);
+
+    } else {
+      if(SDL_CreateWindowAndRenderer(fenetre.w,fenetre.h,0,&window,&renderer) != 0)
+        SDL_ExitWithError("Creation fenetre et rendu echouee",renderer,window);
+    }
+
 
     if(TTF_Init() != 0)
       SDL_ExitWithError("Chargement de ttf",renderer,window);
