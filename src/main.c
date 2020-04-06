@@ -10,9 +10,6 @@
 
 int main(int argc, char **argv){
 
-
-
-
     /* Création des variables d'affichage celles-ci pourront être modifiés dans le programme*/
 
     // Taille de la fenetre

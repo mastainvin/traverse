@@ -68,7 +68,6 @@ void initialisationTab(cell tab[10][10],int nbrJoueurs){
   }// fin if (nbrJoueurs == 3 || nbrJoueurs == 4)}
 }
 
-
 void initialisationTabRest(bool tab[8]){
   for (int i = 0; i < 8; i++) {
     tab[i] = true;
@@ -324,7 +323,6 @@ int autorisation(int i, int j, int k, int l, cell tab[10][10]){
     return invalide;
 }
 
-
 void TourJoueurs(cell tab[10][10],game param_partie, float x, float y, SDL_Rect plateau, coordInt *selectedBox, bool *selected, int *player, bool *inTurn, bool restriction[8]){
 
   coordInt coord_temp;
@@ -341,6 +339,7 @@ void TourJoueurs(cell tab[10][10],game param_partie, float x, float y, SDL_Rect 
 
   int i_temp = 0;
   int j_temp = 0;
+
   coord_temp = selectionMove(tab,x,y,plateau);
 
   if(coord_temp.x >= 0 && coord_temp.y >= 0){
@@ -375,35 +374,36 @@ void TourJoueurs(cell tab[10][10],game param_partie, float x, float y, SDL_Rect 
 
           case 2:
               remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,false,false,false,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,false,false);
-            break;
+          break;
 
           case 3:
               remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0 ,false,false,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
           break;
 
           case 4:
-            remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,tab[selectedBox->x][selectedBox->y+1].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
+              remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,tab[selectedBox->x][selectedBox->y+1].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
           break;
           }
 
       break;
       //Tour joueur 2 -----------------------------------------------------------------------------------------------------------------------------------------
       case 2:
-            switch (tab[selectedBox->x][selectedBox->y].pion) {
-              case 1:
-                remplirRestriction(restriction,false,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y].pion > 0,false,tab[selectedBox->x][selectedBox->y+1].pion > 0,false);
-              break;
+          switch (tab[selectedBox->x][selectedBox->y].pion) {
+            case 1:
+              remplirRestriction(restriction,false,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y].pion > 0,false,tab[selectedBox->x][selectedBox->y+1].pion > 0,false);
+            break;
 
-              case 2:
-                remplirRestriction(restriction,false,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,false,false,false,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0 );
-              break;
+            case 2:
+              remplirRestriction(restriction,false,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,false,false,false,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0 );
+            break;
 
-              case 3:
-                remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,false,false,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
-              break;
-              case 4:
-                remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,tab[selectedBox->x][selectedBox->y+1].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
-              break;
+            case 3:
+              remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,false,false,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
+            break;
+
+            case 4:
+              remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,tab[selectedBox->x][selectedBox->y+1].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
+            break;
 
               }
       break;
@@ -422,14 +422,15 @@ void TourJoueurs(cell tab[10][10],game param_partie, float x, float y, SDL_Rect 
         }
 
     }
-    if(!*inTurn) {
-      *player = *player%(param_partie->joueurs + param_partie->ordis) + 1;
-      *selected = false;
-      selectedBox->x = -1;
-      selectedBox->y = -1;
-      *inTurn = false;
-      initialisationTabRest(restriction);
-    }
+
   }
+ }
+ if(!*inTurn) {
+   *player = *player%(param_partie->joueurs + param_partie->ordis) + 1;
+   *selected = false;
+   selectedBox->x = -1;
+   selectedBox->y = -1;
+   *inTurn = false;
+   initialisationTabRest(restriction);
  }
 }
