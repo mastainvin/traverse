@@ -10,9 +10,6 @@
 
 int main(int argc, char **argv){
 
-
-
-
     /* Création des variables d'affichage celles-ci pourront être modifiés dans le programme*/
 
     // Taille de la fenetre
@@ -38,15 +35,12 @@ int main(int argc, char **argv){
     if (SDL_Init(SDL_INIT_VIDEO) != 0)
       SDL_ExitWithError("Initialisation de la SDL",renderer,window);
 
+    int modeOuverture = 0;
     if (argc == 2 && strcmp(argv[1]," fullscreen")){
-        if(SDL_CreateWindowAndRenderer(fenetre.w,fenetre.h,SDL_WINDOW_FULLSCREEN,&window,&renderer) != 0)
-          SDL_ExitWithError("Creation fenetre et rendu echouee",renderer,window);
-
-    } else {
-      if(SDL_CreateWindowAndRenderer(fenetre.w,fenetre.h,0,&window,&renderer) != 0)
-        SDL_ExitWithError("Creation fenetre et rendu echouee",renderer,window);
+        modeOuverture = SDL_WINDOW_FULLSCREEN;
     }
-
+    if(SDL_CreateWindowAndRenderer(fenetre.w,fenetre.h,modeOuverture,&window,&renderer) != 0)
+      SDL_ExitWithError("Creation fenetre et rendu echouee",renderer,window);
 
     if(TTF_Init() != 0)
       SDL_ExitWithError("Chargement de ttf",renderer,window);
@@ -61,10 +55,10 @@ int main(int argc, char **argv){
     while (loc != quit) {
       switch (loc) {
         case inGame:
-          loc = jeu(fenetre,window,renderer,param_partie);
+          loc = jeu(&fenetre,window,renderer,param_partie);
         break;
         case inMenu:
-          loc = menu(fenetre,window,renderer, param_partie);
+          loc = menu(&fenetre,window,renderer,param_partie);
         break;
         default:
           SDL_ExitWithError("ERREUR : localisation utilisation", renderer, window);

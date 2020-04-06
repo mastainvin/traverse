@@ -68,11 +68,17 @@ void initialisationTab(cell tab[10][10],int nbrJoueurs){
   }// fin if (nbrJoueurs == 3 || nbrJoueurs == 4)}
 }
 
-
 void initialisationTabRest(bool tab[8]){
   for (int i = 0; i < 8; i++) {
     tab[i] = true;
   }
+}
+
+void initilisationPlayerMove(playerMove *move){
+  move->player = 1;
+  move->selected = false;
+  move->inTurn = false;
+  move->firstMove = false;
 }
 
 int elementCorrespondant(bool tab[8], int i, int j){
@@ -324,112 +330,148 @@ int autorisation(int i, int j, int k, int l, cell tab[10][10]){
     return invalide;
 }
 
+void TourJoueurs(cell tab[10][10],game param_partie, float x, float y, SDL_Rect plateau, coordInt *selectedBox, bool restriction[8],playerMove *move){
 
-void TourJoueurs(cell tab[10][10],game param_partie, float x, float y, SDL_Rect plateau, coordInt *selectedBox, bool *selected, int *player, bool *inTurn, bool restriction[8]){
-
+  // Création des coordonées de la case sélectionnée
   coordInt coord_temp;
 
-  if(!*selected){
+  // Si le joueur n'a pas encore désigné son pion de départ
+  if(!move->selected){
+    // Sélection du pion temporaire de départ
       coord_temp = selectionPion(tab,x,y,plateau);
-      if (tab[coord_temp.x][coord_temp.y].joueur == *player && tab[coord_temp.x][coord_temp.y].pion != 0) {
-        *selected = true;
-        *selectedBox = coord_temp;
-        *inTurn = true;
+      // Si cela correspond à un des ses pions
+      if (tab[coord_temp.x][coord_temp.y].joueur == move->player && tab[coord_temp.x][coord_temp.y].pion != 0) {
+        move->selected = true; // Il a alors sélectionné son pion
+        *selectedBox = coord_temp; // On valide que la case appuyée correspond à un pion pour pouvoir le déplacer plus tard
+        move->inTurn = true; // Le joueur est alors en tour tant le code sera répété tant qu'il n'a pas finis
+        move->firstMove = false; // Le joueur n'a pas encore fait son premier déplacement et ne peut donc pas finir son tour
       }
-      return;
   } else {
+    // Sélection du pion d'arrivée
 
-  int i_temp = 0;
-  int j_temp = 0;
-  coord_temp = selectionMove(tab,x,y,plateau);
+    // Coordonnées temporaires de la position du pion d'arrivé en fonction du pion de départ
+    int i_temp = 0;
+    int j_temp = 0;
 
-  if(coord_temp.x >= 0 && coord_temp.y >= 0){
+    // Sélection du pion temporaire d'arrivé
+    coord_temp = selectionMove(tab,x,y,plateau);
 
-    if((selectedBox->x - coord_temp.x)/2 >=0)
-      i_temp = -ceil(fabs((selectedBox->x - coord_temp.x)/2.0));
-    else
-      i_temp = ceil(fabs((selectedBox->x - coord_temp.x)/2.0));
+    // Si il est valide
+    if(coord_temp.x >= 0 && coord_temp.y >= 0){
 
-    if((selectedBox->y - coord_temp.y)/2 >= 0)
-      j_temp = -ceil(fabs((selectedBox->y - coord_temp.y)/2.0));
-    else
-      j_temp = ceil(fabs((selectedBox->y - coord_temp.y)/2.0));
+      /* Calcul de la position du pion d'arrivé en fonction d'un autre
+        (-1,1) ou (1,1) ou (-1,0) etc...
+        Cela permettera de savoir si le saut est possible par la suite.
+        Le code fonctionne très bien si l'utilisateur veut sauter ou pas
+        car il fait la partie entière de sa division par 2.
+      */
 
-    if(autorisation(selectedBox->x,selectedBox->y,coord_temp.x,coord_temp.y,tab)==0 && restriction[elementCorrespondant(restriction,i_temp,j_temp)]){
-      tab[coord_temp.x][coord_temp.y].joueur = tab[selectedBox->x][selectedBox->y].joueur;
-      tab[coord_temp.x][coord_temp.y].pion = tab[selectedBox->x][selectedBox->y].pion;
-      tab[selectedBox->x][selectedBox->y].joueur = 0;
-      tab[selectedBox->x][selectedBox->y].pion = 0;
+      if((selectedBox->x - coord_temp.x)/2 >=0)
+        i_temp = -ceil(fabs((selectedBox->x - coord_temp.x)/2.0));
+      else
+        i_temp = ceil(fabs((selectedBox->x - coord_temp.x)/2.0));
 
-      *selectedBox = coord_temp;
+      if((selectedBox->y - coord_temp.y)/2 >= 0)
+        j_temp = -ceil(fabs((selectedBox->y - coord_temp.y)/2.0));
+      else
+        j_temp = ceil(fabs((selectedBox->y - coord_temp.y)/2.0));
 
+        // Si la coordonnée temporaire repecte les règles de jeux et qu'il respecte les restrictions apportées par son saut (elles n'existent pas si il n'a pas encore joué (voir init du tab))
+      if(autorisation(selectedBox->x,selectedBox->y,coord_temp.x,coord_temp.y,tab)==0 && restriction[elementCorrespondant(restriction,i_temp,j_temp)]){
 
-    switch (*player) {
-      //Tour joueur 1 -----------------------------------------------------------------------------------------------------------------------------------------
-      case 1:
+        // Le mouvement est donc validé et le pion se déplace
+        tab[coord_temp.x][coord_temp.y].joueur = tab[selectedBox->x][selectedBox->y].joueur;
+        tab[coord_temp.x][coord_temp.y].pion = tab[selectedBox->x][selectedBox->y].pion;
+        tab[selectedBox->x][selectedBox->y].joueur = 0;
+        tab[selectedBox->x][selectedBox->y].pion = 0;
 
-        switch (tab[selectedBox->x][selectedBox->y].pion) {
+        // La case sélectionné prend alors la valeur de la case temporaire pour pouvoir faire des sauts et recommencer se code avec cette nouvelle case
+        *selectedBox = coord_temp;
+
+        // Le joueur a fait son premier coup ou la déjà, il peut alors finir son tour
+        move->firstMove= true;
+
+        // Création des restrictions en fonction de chaque joueur et chaque pion
+        switch (move->player) {
+          //Tour joueur 1 -----------------------------------------------------------------------------------------------------------------------------------------
           case 1:
-              remplirRestriction(restriction,false,tab[selectedBox->x][selectedBox->y-1].pion > 0,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y].pion > 0,false,false,tab[selectedBox->x][selectedBox->y+1].pion > 0,false);
-          break;
 
-          case 2:
-              remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,false,false,false,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,false,false);
-            break;
-
-          case 3:
-              remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0 ,false,false,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
-          break;
-
-          case 4:
-            remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,tab[selectedBox->x][selectedBox->y+1].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
-          break;
-          }
-
-      break;
-      //Tour joueur 2 -----------------------------------------------------------------------------------------------------------------------------------------
-      case 2:
             switch (tab[selectedBox->x][selectedBox->y].pion) {
               case 1:
-                remplirRestriction(restriction,false,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y].pion > 0,false,tab[selectedBox->x][selectedBox->y+1].pion > 0,false);
+                  // En fonction des règles on regarde si le saut est possible, il ne peut donc pas faire de coup normal à la place d'un saut
+                  remplirRestriction(restriction,false,tab[selectedBox->x][selectedBox->y-1].pion > 0,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y].pion > 0,false,false,tab[selectedBox->x][selectedBox->y+1].pion > 0,false);
               break;
 
               case 2:
-                remplirRestriction(restriction,false,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,false,false,false,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0 );
+                  remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,false,false,false,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,false,false);
               break;
 
               case 3:
-                remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,false,false,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
+                  remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0 ,false,false,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
               break;
+
               case 4:
-                remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,tab[selectedBox->x][selectedBox->y+1].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
+                  remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,tab[selectedBox->x][selectedBox->y+1].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
               break;
-
               }
-      break;
 
-      case 3:
-      break;
+          break;
+          //Tour joueur 2 -----------------------------------------------------------------------------------------------------------------------------------------
+          case 2:
+              switch (tab[selectedBox->x][selectedBox->y].pion) {
+                case 1:
+                  remplirRestriction(restriction,false,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y].pion > 0,false,tab[selectedBox->x][selectedBox->y+1].pion > 0,false);
+                break;
 
-      case 4:
-      break;
-    }
+                case 2:
+                  remplirRestriction(restriction,false,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,false,false,false,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0 );
+                break;
 
-        *inTurn = false;
-        for (int i = 0; i < 8; i++) {
-          if (restriction[i] == true)
-            *inTurn = true;
+                case 3:
+                  remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,false,false,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,false,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
+                break;
+
+                case 4:
+                  remplirRestriction(restriction,tab[selectedBox->x-1][selectedBox->y-1].pion > 0,tab[selectedBox->x][selectedBox->y-1].pion > 0,tab[selectedBox->x+1][selectedBox->y-1].pion > 0,tab[selectedBox->x-1][selectedBox->y].pion > 0,tab[selectedBox->x+1][selectedBox->y].pion > 0,tab[selectedBox->x-1][selectedBox->y+1].pion > 0,tab[selectedBox->x][selectedBox->y+1].pion > 0,tab[selectedBox->x+1][selectedBox->y+1].pion > 0);
+                break;
+
+                  }
+          break;
+
+          //Tour joueur 3 -----------------------------------------------------------------------------------------------------------------------------------------
+          case 3:
+          break;
+
+          //Tour joueur 4 -----------------------------------------------------------------------------------------------------------------------------------------
+          case 4:
+          break;
         }
-
-    }
-    if(!*inTurn) {
-      *player = *player%(param_partie->joueurs + param_partie->ordis) + 1;
-      *selected = false;
+          // On regarde si le joueur peut encore jouer
+          move->inTurn = false;
+          for (int i = 0; i < 8; i++) {
+            // Si il existe une seule restriction possible le joueur peut jouer
+            if (restriction[i] == true)
+              move->inTurn = true;
+          }
+      }
+    } else {
+      // Si le joueur n'a pas cliqué sur un case valable du tableau, vérifie qu'il veuille re-sélection un nouveau pion
+      coord_temp = selectionPion(tab,x,y,plateau);
+      // Le code est similaire à la sélection
+          if (tab[coord_temp.x][coord_temp.y].joueur == move->player && tab[coord_temp.x][coord_temp.y].pion != 0 && move->firstMove == false) {
+            *selectedBox = coord_temp;
+          }
+        }
+      // Si le tour d'un joueur est finir alors on passe au joueur suivant et on remet les valeurs à zéro
+     if(!move->inTurn) {
+      move->player = move->player%(param_partie->joueurs + param_partie->ordis) + 1;
+      move->selected = false;
       selectedBox->x = -1;
       selectedBox->y = -1;
-      *inTurn = false;
+      move->inTurn = false;
       initialisationTabRest(restriction);
     }
-  }
  }
+
+ return;
 }
