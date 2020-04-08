@@ -9,8 +9,6 @@
 #include <math.h>
 
 
-
-
 // Fonction de retour d'erreur permet fermeture propre de la fenêtre
 void SDL_ExitWithError(const char *message, SDL_Renderer *renderer, SDL_Window *window){
   SDL_Log("ERREUR : %s > %s\n", message,SDL_GetError());
@@ -227,90 +225,6 @@ menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect *
   return selection;
 }
 
-location menu(SDL_Rect *fenetre, SDL_Window *window, SDL_Renderer *renderer, game param_partie){
-
-  initPartie(param_partie);
-
-  location loc = inMenu;
-
-  curseur monCurseur = creerCurseur(renderer,window);
-  coord coordClic;
-  coord coordMouse;
-
-  coordClic.x = 0;
-  coordClic.y = 0;
-
-  coordMouse.x = 0;
-  coordMouse.y = 0;
-
-  menu_bouton selection = rien;
-  unsigned int frame_limit = 0;
-
-
-    while (loc == inMenu) {
-
-      SDL_Event  event;
-
-      SDL_RenderClear(renderer);
-      creationBackground(renderer,fenetre);
-
-      if (selection == rien)
-        selection = menu_principal(renderer,window,fenetre,coordMouse,coordClic);
-
-
-      if (selection != rien && selection != quitter)
-        selection = menu_secondaire(renderer,window,fenetre, selection,coordMouse,coordClic, param_partie);
-
-      afficherCurseur(monCurseur,renderer);
-      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
-      limit_fps(frame_limit,fenetre,window,renderer);
-      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
-
-      SDL_RenderPresent(renderer);
-
-      // Réinitalisation des coordonnées du clic pour évité boucles
-      coordClic.x = 0;
-      coordClic.y = 0;
-
-        while (SDL_PollEvent(&event)) {
-          switch (event.type) {
-            case SDL_QUIT:
-              selection = quitter;
-            break;
-            case SDL_MOUSEMOTION:
-              monCurseur.position.x = event.motion.x;
-              monCurseur.position.y = event.motion.y;
-              coordMouse.x = monCurseur.position.x;
-              coordMouse.y = monCurseur.position.y;
-            break;
-            case SDL_MOUSEBUTTONDOWN:
-              coordClic.x = event.button.x;
-              coordClic.y = event.button.y;
-            break;
-            case SDL_KEYDOWN:
-              if (event.key.keysym.sym == SDLK_ESCAPE)
-                selection = quitter;
-            break;
-
-            default:
-            break;
-          }
-        }
-
-
-        if (selection == quitter)
-          loc = quit;
-        if (selection == commencer)
-          loc = inGame;
-    }
-    detruireCurseur(monCurseur);
-
-
-
-
-    return loc;
-}
-
 menu_bouton menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre, menu_bouton selection, coord coordCurseur, coord coordClic, game param_partie){
 
 menu_bouton newSelection = rien;
@@ -410,102 +324,6 @@ char nomDuFichier[500];
 
   return newSelection;
 
-}
-
-location jeu(SDL_Rect *fenetre,SDL_Window *window, SDL_Renderer *renderer,game param_partie){
-
-  location loc= inGame;
-  curseur monCurseur = creerCurseur(renderer,window);
-  bool inPause = false;
-
-
-  bool restriction[8];
-  initialisationTabRest(restriction);
-  cell tab[10][10];
-  initialisationTab(tab,param_partie->joueurs + param_partie->ordis);
-  playerMove *move;
-  move = malloc(sizeof(*move));
-  initilisationPlayerMove(move);
-
-  coordInt selectedBox;
-  selectedBox.x = -1;
-  selectedBox.y = -1;
-
-  coord coordClic;
-  coord coordCurseur;
-
-  SDL_Rect plateau;
-  plateau.w = 500;
-  plateau.h = 500;
-  plateau.x = (fenetre->w - plateau.w)/2;
-  plateau.y = (fenetre->h - plateau.h)/2;
-  SDL_bool program_launched = SDL_TRUE;
-
-  unsigned int frame_limit = 0;
-
-
-  while(program_launched) {
-      SDL_Event event;
-      coordClic.x = 0;
-      coordClic.y = 0;
-      while(SDL_PollEvent(&event)) {
-          switch (event.type) {
-            case SDL_QUIT:
-              loc = quit;
-              break;
-            case SDL_KEYDOWN:
-              if (event.key.keysym.sym == SDLK_ESCAPE)
-                inPause = !inPause;
-
-              break;
-            case SDL_MOUSEBUTTONDOWN:
-              coordClic.x = event.button.x;
-              coordClic.y = event.button.y;
-              break;
-            case SDL_MOUSEMOTION:
-              monCurseur.position.x = event.motion.x;
-              monCurseur.position.y = event.motion.y;
-              coordCurseur.x = monCurseur.position.x;
-              coordCurseur.y = monCurseur.position.y;
-
-            break;
-            default:
-              break;
-          }
-        }
-
-
-        SDL_RenderClear(renderer);
-        TourJoueurs(tab,param_partie,coordClic.x,coordClic.y, plateau, &selectedBox,restriction, move);
-        creationBackground(renderer,fenetre);
-        creationFond(renderer,window,fenetre,coordClic,coordCurseur, &inPause, move);
-        generatePion(window,renderer,plateau,tab);
-
-        // Si on est en pause
-        if(inPause){
-          SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);
-          SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-          SDL_RenderFillRect(renderer, NULL);
-          SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-          loc = menu_pause(renderer,window,fenetre, coordCurseur,coordClic, &inPause);
-        }
-
-
-      afficherCurseur(monCurseur,renderer);
-
-      // Gestion de la limite
-      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
-      limit_fps(frame_limit,fenetre,window,renderer);
-      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
-
-      SDL_RenderPresent(renderer);
-
-      if(loc != inGame)
-        program_launched = SDL_FALSE;
-
-  }
-  detruireCurseur(monCurseur);
-  return loc;
 }
 
 location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre,coord coordCurseur, coord coordClic, bool *inPause){
