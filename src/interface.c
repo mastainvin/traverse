@@ -4,14 +4,17 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
-
+#include <string.h>
+#include <stdlib.h>
 #include <time.h>
 #include <math.h>
 
 
+
+
 // Fonction de retour d'erreur permet fermeture propre de la fenêtre
 void SDL_ExitWithError(const char *message, SDL_Renderer *renderer, SDL_Window *window){
-  SDL_Log("ERREUR : %s > %s\n", message,SDL_GetError());
+  SDL_Log("%s > %s\n", message,SDL_GetError());
   SDL_DestroyRenderer(renderer);
   SDL_DestroyWindow(window);
   TTF_Quit();
@@ -411,6 +414,7 @@ void limit_fps(unsigned int limit, SDL_Rect *fenetre,SDL_Window *window, SDL_Ren
     SDL_Delay(limit - tick);
 
 }
+
 
 void afficherImage(char *lienImage,float x, float y, SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre){
 
