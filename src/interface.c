@@ -124,7 +124,7 @@ void generatePion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,ce
   for (int i = 0; i < 10; i++) {
     for (int j = 0; j < 10; j++) {
       if(tab[i][j].joueur > 0)
-        afficherPion(window,renderer,plateau,tab[i][j].joueur,tab[i][j].pion,i,j);
+        afficherPion(window,renderer,plateau,tab[i][j].joueur,tab[i][j].pion,j,i);
     }
   }
 }
@@ -142,8 +142,8 @@ coordInt selectionPion(cell tab[10][10], float x, float y, SDL_Rect plateau){
 
   if(x >= plateau.x && x < plateau.x + plateau.w && y >= plateau.y && y < plateau.x + plateau.h){
     int i,j;
-    i = floor((x - plateau.x)/50);
-    j = floor((y - plateau.y)/50);
+    j = floor((x - plateau.x)/50);
+    i = floor((y - plateau.y)/50);
 
     if(tab[i][j].joueur != 0){
       selectedPion.x = i;
@@ -161,8 +161,8 @@ coordInt selectionMove(cell tab[10][10], float x, float y, SDL_Rect plateau){
 
   if(x >= plateau.x && x < plateau.x + plateau.w && y >= plateau.y && y < plateau.x + plateau.h){
     int i,j;
-    i = floor((x - plateau.x )/50);
-    j = floor((y - plateau.y)/50);
+    j = floor((x - plateau.x )/50);
+    i = floor((y - plateau.y)/50);
     if(tab[i][j].joueur == 0){
       selectedPion.x = i;
       selectedPion.y = j;

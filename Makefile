@@ -3,7 +3,7 @@ SRC = $(wildcard src/*.c)
 OBJ = $(SRC:.c=.o)
 CFLAGS = -Wall
 LDFLAGS = -lSDL2 -lSDL2_Image -lSDL2_ttf -lm
-EXEC = ./bin/traverse
+EXEC = ./src/traverse
 
 
 all :$(EXEC)

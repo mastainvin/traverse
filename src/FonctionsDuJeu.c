@@ -19,18 +19,18 @@ void initialisationTab(cell tab[10][10],int nbrJoueurs){
 //Placons les pions avec le carré = 1, le triangle = 2, le losange = 3, le rond = 4.
 //En fonction du nombre de joueurs.Ici 2 joueurs
   for (int i = 1; i <= 4; i++) {
-    tab[i][0].pion = (temp%4) + 1;
-    tab[i][0].joueur = 2;
-    tab[i][9].pion = (temp%4) + 1;
-    tab[i][9].joueur = 1;
+    tab[0][i].pion = (temp%4) + 1;
+    tab[0][i].joueur = 2;
+    tab[9][i].pion = (temp%4) + 1;
+    tab[9][i].joueur = 1;
     temp = temp + 1;
   }
   temp = 4;
   for (int i = 5; i <= 8; i++) {
-    tab[i][0].pion = temp;
-    tab[i][0].joueur = 2;
-    tab[i][9].pion = temp;
-    tab[i][9].joueur = 1;
+    tab[0][i].pion = temp;
+    tab[0][i].joueur = 2;
+    tab[9][i].pion = temp;
+    tab[9][i].joueur = 1;
     temp = temp - 1;
   }
     temp = 0;
@@ -113,222 +113,191 @@ void remplirRestriction(bool tab[8],bool un, bool deux, bool trois, bool quatre,
   tab[7]= huit;
 }
 // i, j, k et l sont les coordonnées de la pièce au début et après le tour.
-int autorisation(int i, int j, int k, int l, cell tab[10][10]){
-    int invalide = 0, invalide2 = 0;
-    int saut1 = 0, saut2 = 0, saut3 = 0, saut4 = 0, saut5 = 0, saut6 = 0, saut7 = 0, saut8 = 0;
-    //cas pour le carre
+int autorisation(int i, int j, int k, int l,cell tab[10][10])
+{
+    int invalide = 0;
+//cas pour le carre
     if( tab[i][j].pion == 1)
-    {   //Lorsque le pion veut effectuer un déplacement simple
-        if((i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l))
-        {
-          invalide = 0;
-        } //Lorsque le pion veut effectuer un saut
-        else if(tab[i][j+1].pion && ((tab[k][l].pion == tab[i][j+2].pion) ||(i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l)))
-        {
-          invalide = 0;
-        }
-        else if(tab[i][j-1].pion && ((tab[k][l].pion == tab[i][j-2].pion) ||(i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l)))
-        {
-          invalide = 0;
-        }
-        else if(tab[i-1][j].pion && ((tab[k][l].pion == tab[i-2][j].pion) ||(i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l)))
-        {
-          invalide = 0;
-        }
-        else if(tab[i+1][j].pion && ((tab[k][l].pion == tab[i+2][j].pion) ||(i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l)))
-        {
-          invalide = 0;
-        } //Si le déplacement voulu est interdit
-        else
-        {
-          invalide = 1;
-        }
+    {
+      if(((i == k && j == l - 1) && (tab[i][j+1].pion == 0)) || ((tab[i][j+1].pion > 0) && (tab[i][j].pion == tab[k][l-2].pion)))
+      {
+        invalide = 0;
+      }
+      else if(((i == k && j == l + 1) && (tab[i][j-1].pion == 0)) || ((tab[i][j-1].pion > 0) && (i == k && j == l + 2)))
+      {
+        invalide = 0;
+      }
+      else if(((i == k + 1 && j == l ) && (tab[i-1][j].pion == 0)) || ((tab[i-1][j].pion > 0) && (i == k + 2 && j == l)))
+      {
+        invalide = 0;
+      }
+      else if(((i == k - 1 && j == l ) && (tab[i+1][j].pion == 0)) || ((tab[i+1][j].pion > 0) && (i == k - 2 && j == l)))
+      {
+        invalide = 0;
+      }
+      else
+      {
+        invalide = 1;
+      }
     }
     //cas pour le losange
-    if( tab[i][j].pion == 3)
-    {   //Lorsque le pion effectue un déplacement simple
-        if(((tab[i-1][j-1].pion == 0) && (k == i - 2 && l == j - 2)) || ((tab[i-1][j+1].pion == 0) && (k == i - 2 && l == j + 2)) || ((tab[i+1][j-1].pion == 0) && (k == i + 2 && l == j - 2)) ||((tab[i+1][j+1].pion == 0) && (k == i + 2 && l == j + 2)))
-        {
-          invalide = 1;
-        } //Lorsque le pion effectue un saut
-        else if(!((i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l)))
-        {
-          invalide = 0;
-        } //Lorsque le déplacement voulu est interdit
-        else
-        {
-          invalide = 1;
-        }
+    else if( tab[i][j].pion == 3)
+    {
+      if((i == k + 1 && j == l + 1)  || ((tab[i-1][j-1].pion > 0) && (i == k + 2 && j == l + 2)))
+      {
+        invalide = 0;
+      }
+      else if((i == k + 1 && j == l - 1) || ((tab[i-1][j+1].pion > 0) && (i == k + 2 && j == l - 2)))
+      {
+        invalide = 0;
+      }
+      else if((i == k - 1 && j == l + 1)  || ((tab[i+1][j-1].pion > 0) && (i == k - 2 && j == l + 2)))
+      {
+        invalide = 0;
+      }
+      else if((i == k - 1 && j == l - 1)  || ((tab[i+1][j+1].pion > 0) && (i == k - 2 && j == l - 2)))
+      {
+        invalide = 0;
+      }
+      else
+      {
+        invalide = 1;
+      }
     }
     //cas pour le rond
-    if( tab[i][j].pion == 4)
+    else if( tab[i][j].pion == 4)
     { //Si le rond veut se déplacer comme un carré
-      if(i == k || j == l)
-      { //Lorsque le pion veut effectuer un déplacement simple
-        if((i == k && j == l - 1) || (i == k && j == l - 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l))
-        {
-          invalide = 0;
-        } //Lorsque le pion veut effectuer un saut
-        else if(tab[i][j+1].pion && ((tab[k][l].pion == tab[i][j+2].pion) ||(i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l)))
-        {
-          invalide = 0;
-        }
-        else if(tab[i][j-1].pion && ((tab[k][l].pion == tab[i][j-2].pion) ||(i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l)))
-        {
-          invalide = 0;
-        }
-        else if(tab[i-1][j].pion && ((tab[k][l].pion == tab[i-2][j].pion) ||(i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l)))
-        {
-          invalide = 0;
-        }
-        else if(tab[i+1][j].pion && ((tab[k][l].pion == tab[i+2][j].pion) ||(i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l)))
-        {
-          invalide = 0;
-        } //Lorsque le déplacement est interdit
-        else
-        {
-          invalide = 1;
-        }
-      } // Si le rond veut se déplacer comme un losange
+      if(((i == k && j == l - 1) && (tab[i][j+1].pion == 0)) || ((tab[i][j+1].pion > 0) && (tab[i][j].pion == tab[k][l-2].pion)))
+      {
+        invalide = 0;
+      }
+      else if(((i == k && j == l + 1) && (tab[i][j-1].pion == 0)) || ((tab[i][j-1].pion > 0) && (i == k && j == l + 2)))
+      {
+        invalide = 0;
+      }
+      else if(((i == k + 1 && j == l ) && (tab[i-1][j].pion == 0)) || ((tab[i-1][j].pion > 0) && (i == k + 2 && j == l)))
+      {
+        invalide = 0;
+      }
+      else if(((i == k - 1 && j == l ) && (tab[i+1][j].pion == 0)) || ((tab[i+1][j].pion > 0) && (i == k - 2 && j == l)))
+      {
+        invalide = 0;
+      }
+       // Si le rond veut se déplacer comme un losange
+      else if((i == k + 1 && j == l + 1)  || ((tab[i-1][j-1].pion > 0) && (i == k + 2 && j == l + 2)))
+      {
+        invalide = 0;
+      }
+      else if((i == k + 1 && j == l - 1) || ((tab[i-1][j+1].pion > 0) && (i == k + 2 && j == l - 2)))
+      {
+        invalide = 0;
+      }
+      else if((i == k - 1 && j == l + 1)  || ((tab[i+1][j-1].pion > 0) && (i == k - 2 && j == l + 2)))
+      {
+        invalide = 0;
+      }
+      else if((i == k - 1 && j == l - 1)  || ((tab[i+1][j+1].pion > 0) && (i == k - 2 && j == l - 2)))
+      {
+        invalide = 0;
+      }
       else
-      {  //Lorsque le pion veut effectuer un déplacement simple
-        if(((tab[i-1][j-1].pion == 0) && (k == i - 2 && l == j - 2)) || ((tab[i-1][j+1].pion == 0) && (k == i - 2 && l == j + 2)) || ((tab[i+1][j-1].pion == 0) && (k == i + 2 && l == j - 2)) ||((tab[i+1][j+1].pion == 0) && (k == i + 2 && l == j + 2)))
-        {
-          invalide = 1;
-        } //Lorsque le pion veut effectuer un saut
-        else if(!((i == k && j == l - 1) || (i == k && j == l + 1) || (i == k + 1 && j == l) || (i == k - 1 && j == l)))
-        {
-          invalide = 0;
-        } //Lorsque le mouvement voule est interdit
-        else
-        {
-          invalide = 1;
-        }
+      {
+        invalide = 1;
       }
     }
     //cas pour le triangle
-    if(tab[i][j].pion == 2)
-    {  //Si le triangle appartient au joueur 1
+    else if(tab[i][j].pion == 2)
+    {
       if(tab[i][j].joueur == 1)
-      { //Si il veut se déplacer verticalement
-        if(j == l)
+      {
+        if((i == k - 1 && j == l ) || ((tab[i+1][j].pion > 0) && (i == k - 2 && j == l)))
         {
-          if( i == k - 1 || ((tab[i+1][j].pion > 0) && (tab[k][l].pion == tab[i+2][j].pion )))
-          {
-            invalide = 0;
-          } //Si le déplacement en "ligne" est interdit
-          if((i == 9 && j == 7) && (k == 8 && l == 7))
-          {
-            invalide = 1;
-          }
-          else
-          {
-            invalide = 1;
-          }
-        } // Si le déplacement voulu est en diagonale
+          invalide = 0;
+        }
+        else if((i == k + 1 && j == l + 1)  || ((tab[i-1][j-1].pion > 0) && (i == k + 2 && j == l + 2)))
+        {
+          invalide = 0;
+        }
+        else if((i == k + 1 && j == l - 1) || ((tab[i-1][j+1].pion > 0) && (i == k + 2 && j == l - 2)))
+        {
+          invalide = 0;
+        }
         else
         {
-          if((i == k + 1 && j == l - 1) || (i == k + 1 && j == l + 1) || (tab[i-1][j-1].pion > 0 && tab[k][l].pion == tab[i-2][j-2].pion) || (tab[i-1][j+1].pion && tab[k][l].pion == tab[i-2][j+2].pion))
-          {
-            invalide = 0;
-          } //Si le déplacement en diagonale est interdit
-          else
-          {
-            invalide = 1;
-          }
+          invalide = 1;
         }
       } //Si le triangle appartient au joueur 2
-      if(tab[i][j].joueur == 2)
+      else if(tab[i][j].joueur == 2)
       {
-        if(j == l)
+        if((i == k + 1 && j == l ) || ((tab[i-1][j].pion > 0) && (i == k + 2 && j == l)))
         {
-          if((i == k + 1) || ((tab[i-1][j].pion > 0 ) && (tab[k][l].pion  == tab[i-2][j].pion )))
-          {
-            invalide = 0;
-          }
-          if((i == 0 && j == 2) && (k == 1 && l == 2))
-          {
-            invalide = 1;
-          }
-          else
-          {
-            invalide = 1;
-          }
-        } // Si le déplacement voulu est en diagonale
+          invalide = 0;
+        }
+        else if((i == k - 1 && j == l + 1)  || ((tab[i+1][j-1].pion > 0) && (i == k - 2 && j == l + 2)))
+        {
+          invalide = 0;
+        }
+        else if((i == k - 1 && j == l - 1)  || ((tab[i+1][j+1].pion > 0) && (i == k - 2 && j == l - 2)))
+        {
+          invalide = 0;
+        }
         else
         {
-          if((i == k - 1 && j == l - 1) || (i == k - 1 && j == l + 1) || (tab[i+1][j-1].pion > 0 && tab[k][l].pion == tab[i+2][j-2].pion) || (tab[i+1][j+1].pion && tab[k][l].pion == tab[i+2][j+2].pion))
-          {
-            invalide = 0;
-          } //Si le déplacement en diagonale est interdit
-          else
-          {
-            invalide = 1;
-          }
+          invalide = 1;
         }
       } //Si le triangle appartient au joueur 3
-      if(tab[i][j].joueur == 3)
+      else if(tab[i][j].joueur == 3)
       {
-        if(i == k)
-        { //Si le déplacement voulu est horizontal
-          if((j == l + 1) || ((tab[i][j-1].pion > 0 ) && (tab[k][l].pion  == tab[i][j-2].pion )))
-          {
-            invalide = 0;
-          } //Si le déplacment en "ligne" est interdit
-          else
-          {
-            invalide = 1;
-          }
-        } // Si le déplacement voulu est en diagonale
+        if((i == k && j == l + 1) || ((tab[i][j-1].pion > 0) && (i == k && j == l + 2)))
+        {
+          invalide = 0;
+        }
+        else if((i == k + 1 && j == l - 1) || ((tab[i-1][j+1].pion > 0) && (i == k + 2 && j == l - 2)))
+        {
+          invalide = 0;
+        }
+        else if((i == k - 1 && j == l - 1)  || ((tab[i+1][j+1].pion > 0) && (i == k - 2 && j == l - 2)))
+        {
+          invalide = 0;
+        }
         else
         {
-          if((i == k - 1 && j == l - 1) || (i == k + 1 && j == l - 1) || (tab[i+1][j+1].pion > 0 && tab[k][l].pion == tab[i+2][j+2].pion) || (tab[i-1][j+1].pion && tab[k][l].pion == tab[i-2][j+2].pion))
-          {
-            invalide = 0;
-          } //Si le déplacement en diagonale est interdit
-          else
-          {
-            invalide = 1;
-          }
+          invalide = 1;
         }
       } //Si le triangle appartient au joueur 4
-      if(tab[i][j].joueur == 4)
-      { //Si le déplacement voulu est horizontal
-        if(i == k)
+      else if(tab[i][j].joueur == 4)
+      {
+        if((i == k && j == l - 1) || ((tab[i][j+1].pion > 0) && (tab[i][j].pion == tab[k][l-2].pion)))
         {
-          if( (j == l - 1) || ((tab[i][j+1].pion > 0 ) && (tab[k][l].pion  == tab[i][j+2].pion )))
-          {
-            invalide = 0;
-          } //Si le déplacment en "ligne" est interdit
-          else
-          {
-            invalide = 1;
-          }
-        } // Si le déplacement voulu est en diagonale
+          invalide = 0;
+        }
+        else if((i == k + 1 && j == l + 1)  || ((tab[i-1][j-1].pion > 0) && (i == k + 2 && j == l + 2)))
+        {
+          invalide = 0;
+        }
+        else if((i == k - 1 && j == l + 1)  || ((tab[i+1][j-1].pion > 0) && (i == k - 2 && j == l + 2)))
+        {
+          invalide = 0;
+        }
         else
         {
-          if((i == k - 1 && j == l + 1) || (i == k + 1 && j == l + 1) || (tab[i+1][j-1].pion > 0 && tab[k][l].pion == tab[i+2][j-2].pion) || (tab[i-1][j-1].pion && tab[k][l].pion == tab[i-2][j-2].pion))
-          {
-            invalide = 0;
-          }  //Si le déplacement en diagonale est interdit
-          else
-          {
-            invalide = 1;
-          }
+          invalide = 1;
         }
       }
     }
-    if( (invalide > 0) || (invalide2 > 0))
+    if( invalide > 0)
     {
       invalide = 1;
+      printf("Ce coup n'est pas permis \n");
     }
      else
      {
        invalide = 0;
-       invalide2 = 0;
      }
     return invalide;
 }
+
+
 
 void TourJoueurs(cell tab[10][10],game param_partie, float x, float y, SDL_Rect plateau, coordInt *selectedBox, bool restriction[8],playerMove *move){
 
