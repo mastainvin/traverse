@@ -106,11 +106,11 @@ int main(int argc, char **argv){
     // Initialisation de la varable loc qui désignera où se situe l'utilisateur
     location loc = inMenu;
 
-    frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
 
     // Boucle du jeu tant que la location de l'utilisateur est différent de quitter
     while (loc != quit) {
 
+      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
       // Mise à zéro événements pour empêcher des actions non désirées (clic infini)
       coordClic.x = 0;
       coordClic.y = 0;
@@ -161,7 +161,8 @@ int main(int argc, char **argv){
 
           TourJoueurs(tab,param_partie,coordClic.x,coordClic.y, plateau, &selectedBox,restriction, move);
           creationFond(renderer,window,fenetre,coordClic,coordMouse, &inPause, move);
-          generatePion(window,renderer,plateau,tab);
+          generatePion(window,renderer,plateau,tab,selectedBox);
+          FiltreDeplacement(window,renderer,plateau,tab,selectedBox, move, restriction);
 
           // Si on est en pause
           if(inPause){
@@ -169,7 +170,7 @@ int main(int argc, char **argv){
             SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
             SDL_RenderFillRect(renderer, NULL);
             SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-            loc = menu_pause(renderer,window,fenetre,coordMouse,coordClic, &inPause);
+            loc = menu_pause(renderer,window,fenetre,coordMouse,coordClic, &inPause, param_partie, move);
           }
         }
 
@@ -219,7 +220,6 @@ int main(int argc, char **argv){
       // Affichage des éléments toujours présents curseur + FPS
       // Limitation des FPS
       afficherCurseur(monCurseur,renderer);
-      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
       limit_fps(frame_limit,fenetre,window,renderer);
       frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
 

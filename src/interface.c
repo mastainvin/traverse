@@ -120,15 +120,41 @@ void creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect *fenetre,co
 
 }
 
-void generatePion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10]){
-  for (int i = 0; i < 10; i++) {
-    for (int j = 0; j < 10; j++) {
-      if(tab[i][j].joueur > 0)
-        afficherPion(window,renderer,plateau,tab[i][j].joueur,tab[i][j].pion,j,i);
-    }
-  }
-}
+void generatePion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10], coordInt selectedBox){
 
+  if(selectedBox.x != -1 && selectedBox.y != -1) {
+    SDL_Rect surbrillance;
+    surbrillance.w = 50;
+    surbrillance.h = 50;
+    surbrillance.x = (plateau.x + selectedBox.y*50);
+    surbrillance.y = (plateau.y + selectedBox.x*50);
+
+      switch (tab[selectedBox.x][selectedBox.y].joueur) {
+        case 1:
+          SDL_SetRenderDrawColor(renderer, 220,20,60, 255);
+        break;
+
+        case 2:
+          SDL_SetRenderDrawColor(renderer, 0, 127, 255, 255);
+        break;
+
+        case 3:
+          SDL_SetRenderDrawColor(renderer, 50,205,50, 255);
+        break;
+
+        case 4:
+          SDL_SetRenderDrawColor(renderer, 255, 228, 54, 255);
+          break;
+      }
+      SDL_RenderFillRect(renderer, &surbrillance);
+    }
+    for (int i = 0; i < 10; i++) {
+      for (int j = 0; j < 10; j++) {
+        if(tab[i][j].joueur > 0)
+          afficherPion(window,renderer,plateau,tab[i][j].joueur,tab[i][j].pion,j,i);
+      }
+    }
+}
 void afficherPion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,int joueur,int pion,int x,int y){
   char nomDuFichier[500];
   sprintf(nomDuFichier,"./../img/jeu/%d_joueur%d.bmp",pion,joueur);
@@ -140,12 +166,12 @@ coordInt selectionPion(cell tab[10][10], float x, float y, SDL_Rect plateau){
   selectedPion.x = -1;
   selectedPion.y = -1;
 
-  if(x >= plateau.x && x < plateau.x + plateau.w && y >= plateau.y && y < plateau.x + plateau.h){
+  if(x > plateau.x && x < plateau.x + plateau.w && y > plateau.y && y < plateau.x + plateau.h){
     int i,j;
     j = floor((x - plateau.x)/50);
     i = floor((y - plateau.y)/50);
 
-    if(tab[i][j].joueur != 0){
+    if(i >= 0 && i <= 9 && j >= 0 && i <= 9 && tab[i][j].joueur != 0){
       selectedPion.x = i;
       selectedPion.y = j;
     }
@@ -159,11 +185,11 @@ coordInt selectionMove(cell tab[10][10], float x, float y, SDL_Rect plateau){
   selectedPion.x = -1;
   selectedPion.y = -1;
 
-  if(x >= plateau.x && x < plateau.x + plateau.w && y >= plateau.y && y < plateau.x + plateau.h){
+  if(x > plateau.x && x < plateau.x + plateau.w && y > plateau.y && y < plateau.x + plateau.h){
     int i,j;
     j = floor((x - plateau.x )/50);
     i = floor((y - plateau.y)/50);
-    if(tab[i][j].joueur == 0){
+    if(i >= 0 && i <= 9 && j >= 0 && i <= 9 && tab[i][j].joueur == 0){
       selectedPion.x = i;
       selectedPion.y = j;
     }
@@ -329,7 +355,7 @@ char nomDuFichier[500];
 
 }
 
-location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre,coord coordCurseur, coord coordClic, bool *inPause){
+location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre,coord coordCurseur, coord coordClic, bool *inPause, game param_partie, playerMove *move){
 
   char nomDuFichier[500];
   menu_bouton selection_hover = rien;
@@ -351,12 +377,19 @@ location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetr
   }
   // Clic sur les boutons
   if (coordClic.x >= 465 && coordClic.x <= 815) {
-    if (coordClic.y >= 400 && coordClic.y <= 450)
+    if (coordClic.y >= 400 && coordClic.y <= 450){
+      initPartie(param_partie);
+      initilisationPlayerMove(move);
+      *inPause = false;
       loc = inMenu;
+    }
+
     //else if(coordClic.y >= 325 && coordClic.y <= 375)
 
-    else if (coordClic.y >= 250 && coordClic.y <= 300)
+    else if (coordClic.y >= 250 && coordClic.y <= 300){
       *inPause = false;
+    }
+
 
   }
 
@@ -394,11 +427,12 @@ void limit_fps(unsigned int limit, SDL_Rect *fenetre,SDL_Window *window, SDL_Ren
     sprintf(fps_text,"%d",0);
   } else if (limit > tick + periode){
     sprintf(fps_text,"%d",1000/periode);
-    SDL_Delay(limit - tick - periode);
+    SDL_Delay(periode);
   }else{
-    sprintf(fps_text,"%d",(limit - tick));
-    SDL_Delay(limit - tick);
+      sprintf(fps_text,"%d",1000/(limit-tick));
+      SDL_Delay(limit - tick);
   }
+
 
   surfaceFPS = TTF_RenderText_Solid(font,fps_text,white);
   textureFPS = SDL_CreateTextureFromSurface(renderer, surfaceFPS);
@@ -413,7 +447,6 @@ void limit_fps(unsigned int limit, SDL_Rect *fenetre,SDL_Window *window, SDL_Ren
   TTF_CloseFont(font);
   SDL_DestroyTexture(textureFPS);
 }
-
 
 void afficherImage(char *lienImage,float x, float y, SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre){
 
@@ -466,3 +499,51 @@ void afficherImage(char *lienImage,float x, float y, SDL_Renderer *renderer, SDL
     SDL_DestroyTexture(textureImage);
 
 }
+
+void FiltreDeplacement(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10], coordInt selectedBox, playerMove *move, bool restriction[8]) {
+
+  if(move->inTurn){
+    for (int i = -2; i < 3; i++) {
+      for (int j = -2; j < 3; j++) {
+        coordInt coord_temp;
+        coord_temp.x = selectedBox.x + i;
+        coord_temp.y = selectedBox.y + j;
+        if (coord_temp.x <= 9 && coord_temp.y <= 9 && coord_temp.x >= 0 && coord_temp.y >= 0 && tab[coord_temp.x][coord_temp.y].joueur == 0) {
+
+          /* Calcul de la position du pion d'arrivé en fonction d'un autre
+            (-1,1) ou (1,1) ou (-1,0) etc...
+            Cela permettera de savoir si le saut est possible par la suite.
+            Le code fonctionne très bien si l'utilisateur veut sauter ou pas
+            car il fait la partie entière de sa division par 2.
+          */
+          int i_temp = 0;
+          int j_temp = 0;
+          float distance_i_temp = fabs((coord_temp.x - selectedBox.x)/2.0);
+          float distance_j_temp = fabs((coord_temp.y - selectedBox.y)/2.0);
+          int signe_i_temp = (coord_temp.x - selectedBox.x)/(2.0 * distance_i_temp);
+          int signe_j_temp = (coord_temp.y - selectedBox.y)/(2.0 * distance_j_temp);
+
+          if(distance_i_temp <= 1)
+            i_temp = ceil(distance_i_temp) * signe_i_temp;
+          else
+            i_temp = floor(distance_i_temp) * signe_i_temp;
+
+          if(distance_j_temp <= 1)
+            j_temp = ceil(distance_j_temp) * signe_j_temp;
+          else
+            j_temp = floor(distance_j_temp) * signe_j_temp;
+
+          if(autorisation(selectedBox.x,selectedBox.y,coord_temp.x,coord_temp.y,tab)==0 && restriction[elementCorrespondant(i_temp,j_temp)] && autorisation_bord(tab,move,selectedBox,coord_temp,true)) {
+            SDL_Rect surbrillance;
+            surbrillance.w = 50;
+            surbrillance.h = 50;
+            surbrillance.x = (plateau.x + coord_temp.y*50);
+            surbrillance.y = (plateau.y + coord_temp.x*50);
+            SDL_SetRenderDrawColor(renderer, 176,176,176, 255);
+            SDL_RenderFillRect(renderer, &surbrillance);
+          }
+         }
+       }
+     }
+   }
+ }

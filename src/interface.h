@@ -9,7 +9,7 @@
 #include <math.h>
 #include "FonctionsDuJeu.h"
 
-#define FRAME_PER_SECOND 30
+#define FRAME_PER_SECOND 60
 #define CENTER 99999
 /* Structures */
 
@@ -67,12 +67,14 @@ menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect *
 menu_bouton menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre, menu_bouton selection, coord coordCurseur, coord coordClic, game param_partie);
 
 void creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect *fenetre,coord coordClic, coord coordCurseur, bool *inPause, playerMove *move);
-void generatePion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10]);
+void generatePion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10], coordInt selectedBox);
 void afficherPion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,int joueur,int pion,int x,int y);
 coordInt selectionPion(cell tab[10][10], float x, float y, SDL_Rect plateau);
 coordInt selectionMove(cell tab[10][10], float x, float y, SDL_Rect plateau);
-location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre,coord coordCurseur, coord coordClic, bool *inPause);
+location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre,coord coordCurseur, coord coordClic, bool *inPause, game param_partie, playerMove *move);
 void afficherImage(char *lienImage,float x, float y, SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre);
 
 void limit_fps(unsigned int limit, SDL_Rect *fenetre,SDL_Window *window, SDL_Renderer *renderer);
+void FiltreDeplacement(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10],coordInt selectedBox, playerMove *move,bool restriction[8]);
+
 #endif
