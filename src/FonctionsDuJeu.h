@@ -29,14 +29,17 @@ typedef struct playerMove{
   bool selected;
   bool inTurn;
   bool firstMove;
+  bool inBorder;
 }playerMove;
 
 void initialisationTab(cell tab[10][10],int nbrJoueurs);
-void initialisationTabRest(bool tab[8]);
+void initialisationTabRest(bool tab[8], bool valeur);
 void initilisationPlayerMove(playerMove *move);
-int elementCorrespondant(bool tab[8], int i, int j);
-void remplirRestriction(bool tab[8],bool un, bool deux, bool trois, bool quatre, bool cinq, bool six, bool sept, bool huit);
+int elementCorrespondant( int i, int j);
+coordInt remplirCoordInt(int i, int j);
+coordInt elementCorrespondantInverse(int i);
 void TourJoueurs(cell tab[10][10],game param_partie, float x, float y, SDL_Rect plateau, coordInt *selectedBox, bool restriction[8],playerMove *move);
 int autorisation(int i, int j, int k, int l, cell tab[10][10]);
-
+void remplirTabRest(cell tab[10][10], bool restriction[8], playerMove *move,int i,int j);
+bool autorisation_bord(cell tab[10][10], playerMove *move, coordInt depart, coordInt arrive, bool first_recusive);
 #endif

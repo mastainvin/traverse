@@ -92,7 +92,7 @@ void creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect *fenetre,co
     if (coordClic.x >= 465 && coordClic.x <= 815 && coordClic.y >= 740 && coordClic.y <= 790)
       *inPause = true;
 
-    if(move->inTurn && move->firstMove){
+    if(move->inTurn && move->firstMove && !move->inBorder){
       if (coordCurseur.x >= 465 && coordCurseur.x <= 815 && coordCurseur.y >= 685 && coordCurseur.y <= 735)
         selection_hover = finir;
 
@@ -103,7 +103,7 @@ void creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect *fenetre,co
 
   // Affichage des 2 boutons : pause + finir le tour
   for(int i = 0; i < 2; i++){
-  if(i == 0 || (move->inTurn == true && move->firstMove)){
+  if(i == 0 || (move->inTurn == true && move->firstMove && !move->inBorder)){
     int j = 0;
 
     if (i+8 == selection_hover)
@@ -379,7 +379,7 @@ location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetr
 
 void limit_fps(unsigned int limit, SDL_Rect *fenetre,SDL_Window *window, SDL_Renderer *renderer){
   unsigned int tick = SDL_GetTicks();
-
+  unsigned int periode = 1000/FRAME_PER_SECOND;
 
 
   SDL_Surface *surfaceFPS = NULL;
@@ -390,12 +390,19 @@ void limit_fps(unsigned int limit, SDL_Rect *fenetre,SDL_Window *window, SDL_Ren
   SDL_Color white = {255,255,255};
   char fps_text[3];
 
-  sprintf(fps_text,"%d",1000/(limit-tick));
+  if(limit < tick){
+    sprintf(fps_text,"%d",0);
+  } else if (limit > tick + periode){
+    sprintf(fps_text,"%d",1000/periode);
+    SDL_Delay(limit - tick - periode);
+  }else{
+    sprintf(fps_text,"%d",(limit - tick));
+    SDL_Delay(limit - tick);
+  }
 
   surfaceFPS = TTF_RenderText_Solid(font,fps_text,white);
   textureFPS = SDL_CreateTextureFromSurface(renderer, surfaceFPS);
   SDL_FreeSurface(surfaceFPS);
-
   SDL_Rect positionFPS;
   SDL_QueryTexture(textureFPS,NULL,NULL,&positionFPS.w, &positionFPS.h);
 
@@ -405,14 +412,6 @@ void limit_fps(unsigned int limit, SDL_Rect *fenetre,SDL_Window *window, SDL_Ren
   SDL_RenderCopy(renderer, textureFPS, NULL, &positionFPS);
   TTF_CloseFont(font);
   SDL_DestroyTexture(textureFPS);
-
-  if(limit < tick)
-    return;
-  else if (limit > tick + FRAME_PER_SECOND)
-    SDL_Delay(16);
-  else
-    SDL_Delay(limit - tick);
-
 }
 
 

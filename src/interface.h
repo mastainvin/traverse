@@ -9,7 +9,7 @@
 #include <math.h>
 #include "FonctionsDuJeu.h"
 
-#define FRAME_PER_SECOND 33
+#define FRAME_PER_SECOND 30
 #define CENTER 99999
 /* Structures */
 

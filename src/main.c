@@ -52,7 +52,7 @@ int main(int argc, char **argv){
 
     // Listes des restrictions de saut envoyés au Pion en cours de mouvement
     bool restriction[8];
-    initialisationTabRest(restriction);
+    initialisationTabRest(restriction,true);
 
     cell tab[10][10];
 
@@ -105,6 +105,8 @@ int main(int argc, char **argv){
 
     // Initialisation de la varable loc qui désignera où se situe l'utilisateur
     location loc = inMenu;
+
+    frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
 
     // Boucle du jeu tant que la location de l'utilisateur est différent de quitter
     while (loc != quit) {
@@ -220,6 +222,7 @@ int main(int argc, char **argv){
       frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
       limit_fps(frame_limit,fenetre,window,renderer);
       frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
+
       SDL_RenderPresent(renderer);
 
 
