@@ -8,19 +8,26 @@
 #include <time.h>
 #include <math.h>
 #include "FonctionsDuJeu.h"
+#include "saves.h"
+#include "config.h"
 
 #define FRAME_PER_SECOND 60
 #define CENTER 99999
+
 /* Structures */
 
-typedef enum location{
+typedef enum location
+{
   inMenu,
   inGame,
+  inSave,
   quit
-}location;
+} location;
 
-typedef enum menu_bouton{
+typedef enum menu_bouton
+{
   jouer,
+  rejouer,
   regles,
   options,
   quitter,
@@ -32,49 +39,60 @@ typedef enum menu_bouton{
   finir,
   rien
 
-}menu_bouton;
+} menu_bouton;
 
-
-typedef struct curseur{
+typedef struct curseur
+{
   SDL_Surface *image;
   SDL_Texture *texture;
   SDL_Rect position;
-}curseur;
+} curseur;
 
-
-
-typedef struct coord{
+typedef struct coord
+{
   float x;
   int y;
-}coord;
+} coord;
 
+typedef struct nom_sauvegarde
+{
+  char nom[NAME_LENGTH];
+  int lettre;
+  int position;
+} nom_sauvegarde;
 
-
-
+typedef struct fleche
+{
+  bool haut;
+  bool bas;
+  int element;
+} fleche;
 /* Prototype des fonctions */
 
 void SDL_ExitWithError(const char *message, SDL_Renderer *renderer, SDL_Window *window);
 
-curseur creerCurseur(SDL_Renderer *renderer, SDL_Window *window);
+curseur creerCurseur(SDL_Renderer *renderer, SDL_Window *window, config_type config);
 void afficherCurseur(curseur monCurseur, SDL_Renderer *renderer);
 void detruireCurseur(curseur monCurseur);
 
-void creationBackground(SDL_Renderer *renderer, SDL_Rect *fenetre);
+void creationBackground(SDL_Renderer *renderer, SDL_Rect *fenetre, config_type config);
 void initPartie(game param_partie);
 
+menu_bouton menu_principal(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre, coord coordCurseur, coord coordClic, config_type config);
+saves menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre, menu_bouton *selection, coord coordCurseur, coord coordClic, saves_value *partie, saves_list *li, fleche *bouton_fleche, config_type *config);
 
-menu_bouton menu_principal(SDL_Renderer *renderer,SDL_Window *window, SDL_Rect *fenetre, coord coordCurseur, coord coordClic);
-menu_bouton menu_secondaire(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre, menu_bouton selection, coord coordCurseur, coord coordClic, game param_partie);
+void plateauDeJeu(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre, coord coordClic, coord coordCurseur, bool *inPause, saves_value *parti, config_type config);
+void generatePion(SDL_Window *window, SDL_Renderer *renderer, SDL_Rect plateau, saves_value *partie, config_type config);
+void afficherPion(SDL_Window *window, SDL_Renderer *renderer, SDL_Rect plateau, int joueur, int pion, int x, int y, config_type config);
 
-void creationFond(SDL_Renderer *renderer,SDL_Window *window,SDL_Rect *fenetre,coord coordClic, coord coordCurseur, bool *inPause, playerMove *move);
-void generatePion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10], coordInt selectedBox);
-void afficherPion(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,int joueur,int pion,int x,int y);
-coordInt selectionPion(cell tab[10][10], float x, float y, SDL_Rect plateau);
-coordInt selectionMove(cell tab[10][10], float x, float y, SDL_Rect plateau);
-location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre,coord coordCurseur, coord coordClic, bool *inPause, game param_partie, playerMove *move);
-void afficherImage(char *lienImage,float x, float y, SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre);
+location menu_pause(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre, coord coordCurseur, coord coordClic, bool *inPause, saves_value *partie, config_type config);
+location menu_save(SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre, cell tab[10][10], coord coordCurseur, coord coordClic, bool *inPause, nom_sauvegarde *save_name, bool *saving, config_type config);
+void initNomSauvegarde(nom_sauvegarde *save_name);
 
-void limit_fps(unsigned int limit, SDL_Rect *fenetre,SDL_Window *window, SDL_Renderer *renderer);
-void FiltreDeplacement(SDL_Window *window, SDL_Renderer *renderer,SDL_Rect plateau,cell tab[10][10],coordInt selectedBox, playerMove *move,bool restriction[8]);
+void afficherTexte(char *text, float x, float y, SDL_Color color, int taille, SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre);
+void afficherImage(char *lienImage, float x, float y, SDL_Renderer *renderer, SDL_Window *window, SDL_Rect *fenetre, config_type config);
+
+void limit_fps(unsigned int limit, SDL_Rect *fenetre, SDL_Window *window, SDL_Renderer *renderer, config_type config);
+void FiltreDeplacement(SDL_Window *window, SDL_Renderer *renderer, SDL_Rect plateau, saves_value *partie);
 
 #endif
