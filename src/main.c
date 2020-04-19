@@ -4,237 +4,375 @@
 #include <SDL2/SDL_ttf.h>
 #include "interface.h"
 #include "FonctionsDuJeu.h"
+#include "saves.h"
+#include "config.h"
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
 
+int main(int argc, char **argv)
+{
 
-int main(int argc, char **argv){
+	/* Création des variables générales*/
 
-    /* Création des variables générales*/
+	// Taille de la fenetre
+	SDL_Rect *fenetre;
+	fenetre = malloc(sizeof(*fenetre));
+	fenetre->h = 800;
+	fenetre->w = 1280;
 
-    // Taille de la fenetre
-    SDL_Rect *fenetre;
-    fenetre = malloc(sizeof(*fenetre));
-    fenetre->h = 800;
-    fenetre->w = 1280;
+	// Position du dernierclic
+	coord coordClic;
+	coordClic.x = 0;
+	coordClic.y = 0;
 
-    // Position du dernierclic
-    coord coordClic;
-    coordClic.x = 0;
-    coordClic.y = 0;
+	// Position du curseur
+	coord coordMouse;
+	coordMouse.x = 0;
+	coordMouse.y = 0;
 
-    // Position du curseur
-    coord coordMouse;
-    coordMouse.x = 0;
-    coordMouse.y = 0;
+	// Initialisation partie
+	saves_value partie_en_cours;
+	initialisationCaseVisit(partie_en_cours.caseVisit);
+	initilisationPlayerMove(&partie_en_cours.move);
+	initialisationTabRest(partie_en_cours.restriction, true);
+	initialisationCaseVisit(partie_en_cours.caseVisit);
+	initPartie(&partie_en_cours.parametre);
+	partie_en_cours.selectedBox.x = -1;
+	partie_en_cours.selectedBox.y = -1;
 
-    // Paramètres de la partie
-    partie *param_partie;
-    param_partie = malloc(sizeof(*param_partie));
-    initPartie(param_partie);
+	// Variable utilse pour compté le temps d'un tour
+	float acc_time = 0;
+	// Sauvegarde et fichier config
+	FILE *fichier_sauvegarde = open_saves_list();
+	FILE *fichier_configuration = open_config();
 
-    // Variable utilisé pour la limite des FPS
-    unsigned int frame_limit = 0;
+	saves_list *liste_sauvegarde;
+	liste_sauvegarde = import_saves(fichier_sauvegarde);
 
-    // Variables d'évenement
-    bool croix_fermeture = false;
-    bool echap = false;
+	config_type configuration;
+	configuration = import_config(fichier_configuration);
 
-    /* Déclaration des variables utilent pour le menu */
+	// Variable utilisé pour la limite des FPS
+	unsigned int frame_limit = 0;
 
-    // Sélection actuel
-    menu_bouton selection = rien;
+	// Variables d'évenement
+	bool croix_fermeture = false;
+	bool echap = false;
+	bool saving = false;
+	/* Déclaration des variables utilent pour le menu */
 
-    /* Déclation des variables utilent pour le jeu */
+	// Sélection actuel
+	menu_bouton selection = rien;
 
-    bool inPause = false;
+	/* Déclation des variables utilent pour le jeu */
 
-    // Listes des restrictions de saut envoyés au Pion en cours de mouvement
-    bool restriction[8];
-    initialisationTabRest(restriction,true);
+	bool inPause = false;
 
-    cell tab[10][10];
+	// Listes des restrictions de saut envoyés au Pion en cours de mouvement
+	nom_sauvegarde save_name;
+	initNomSauvegarde(&save_name);
 
-    // Voir structure playerMove
-    playerMove *move;
-    move = malloc(sizeof(*move));
-    initilisationPlayerMove(move);
+	fleche bouton_fleche;
+	bouton_fleche.haut = false;
+	bouton_fleche.bas = false;
+	bouton_fleche.element = 1;
 
-    // Coordonnées entières de la case sélectionné
-    coordInt selectedBox;
-    selectedBox.x = -1;
-    selectedBox.y = -1;
+	// Définition à l'aide de la SDL du plateau
+	SDL_Rect plateau;
+	plateau.w = 500;
+	plateau.h = 500;
+	plateau.x = (fenetre->w - plateau.w) / 2;
+	plateau.y = (fenetre->h - plateau.h) / 2;
 
-    // Définition à l'aide de la SDL du plateau
-    SDL_Rect plateau;
-    plateau.w = 500;
-    plateau.h = 500;
-    plateau.x = (fenetre->w - plateau.w)/2;
-    plateau.y = (fenetre->h - plateau.h)/2;
+	/* Déclaration propres à la SDL*/
 
+	// Déclaration des variables de la fenêtre et du renderer pour faire fontionner la SDL
+	SDL_Window *window = NULL;
+	SDL_Renderer *renderer = NULL;
 
-    /* Déclaration propres à la SDL*/
+	// Initialisation de la SDL
+	if (SDL_Init(SDL_INIT_VIDEO) != 0)
+		SDL_ExitWithError("Initialisation de la SDL", renderer, window);
 
-    // Déclaration des variables de la fenêtre et du renderer pour faire fontionner la SDL
-    SDL_Window *window = NULL;
-    SDL_Renderer *renderer = NULL;
+	// Création de la fenêtre et du renderer en fonction paramètres d'entrés
+	int modeOuverture = 0;
+	if (configuration.fullscreen)
+		modeOuverture = SDL_WINDOW_FULLSCREEN;
 
+	if (SDL_CreateWindowAndRenderer(fenetre->w, fenetre->h, modeOuverture, &window, &renderer) != 0)
+		SDL_ExitWithError("Creation fenetre et rendu echouee", renderer, window);
 
-    // Initialisation de la SDL
-    if (SDL_Init(SDL_INIT_VIDEO) != 0)
-      SDL_ExitWithError("Initialisation de la SDL",renderer,window);
+	// Initialise de la librairie texte de SDL
+	if (TTF_Init() != 0)
+		SDL_ExitWithError("Chargement de ttf", renderer, window);
 
-    // Création de la fenêtre et du renderer en fonction paramètres d'entrés
-    int modeOuverture = 0;
-    if (argc == 2 && strcmp(argv[1]," fullscreen")){
-        modeOuverture = SDL_WINDOW_FULLSCREEN;
-    }
-    if(SDL_CreateWindowAndRenderer(fenetre->w,fenetre->h,modeOuverture,&window,&renderer) != 0)
-      SDL_ExitWithError("Creation fenetre et rendu echouee",renderer,window);
+	// Effacement du curseur original
+	SDL_ShowCursor(SDL_DISABLE);
 
-    // Initialise de la librairie texte de SDL
-    if(TTF_Init() != 0)
-      SDL_ExitWithError("Chargement de ttf",renderer,window);
+	// Création d'un nouveau curseur
+	curseur monCurseur = creerCurseur(renderer, window, configuration);
 
-    // Effacement du curseur original
-    SDL_ShowCursor(SDL_DISABLE);
+	// Initialisation de la varable loc qui désignera où se situe l'utilisateur
+	location loc = inMenu;
+	// Boucle du jeu tant que la location de l'utilisateur est différent de quitter
+	while (loc != quit)
+	{
 
-    // Création d'un nouveau curseur
-    curseur monCurseur = creerCurseur(renderer,window);
+		frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
+		// Mise à zéro événements pour empêcher des actions non désirées (clic infini)
+		coordClic.x = 0;
+		coordClic.y = 0;
 
-    // Initialisation de la varable loc qui désignera où se situe l'utilisateur
-    location loc = inMenu;
+		bouton_fleche.haut = false;
+		bouton_fleche.bas = false;
 
+		croix_fermeture = false;
+		echap = false;
 
-    // Boucle du jeu tant que la location de l'utilisateur est différent de quitter
-    while (loc != quit) {
+		// Déclaration de la variable événement
+		SDL_Event event;
 
-      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
-      // Mise à zéro événements pour empêcher des actions non désirées (clic infini)
-      coordClic.x = 0;
-      coordClic.y = 0;
-      croix_fermeture = false;
-      echap = false;
+		// Récupération des événement avec la SDL
+		while (SDL_PollEvent(&event))
+		{
+			switch (event.type)
+			{
+			case SDL_QUIT:
+			{
+				croix_fermeture = true;
+			}
+			break;
+			case SDL_MOUSEMOTION:
+			{
+				monCurseur.position.x = event.motion.x;
+				monCurseur.position.y = event.motion.y;
+				coordMouse.x = monCurseur.position.x;
+				coordMouse.y = monCurseur.position.y;
+			}
+			break;
+			case SDL_MOUSEBUTTONDOWN:
+			{
+				coordClic.x = event.button.x;
+				coordClic.y = event.button.y;
+			}
+			break;
+			case SDL_KEYDOWN:
+			{
+				// ON détermine si le bouton appuyé est autorisé
+				save_name.lettre = -1;
+				int alphabet[28] = {SDLK_a, SDLK_b, SDLK_c, SDLK_d, SDLK_e, SDLK_f, SDLK_g, SDLK_h, SDLK_i, SDLK_j, SDLK_k, SDLK_l, SDLK_m, SDLK_n, SDLK_o, SDLK_p, SDLK_q, SDLK_r, SDLK_s, SDLK_t, SDLK_u, SDLK_v, SDLK_w, SDLK_x, SDLK_y, SDLK_z, SDLK_DELETE, SDLK_RETURN};
+				if (event.key.keysym.sym == SDLK_ESCAPE)
+					echap = true;
+				for (int i = 0; i < 28; i++)
+				{
+					if (event.key.keysym.sym == alphabet[i])
+						save_name.lettre = i;
+				}
+				if (event.key.keysym.sym == 8)
+				{
+					save_name.lettre = 26;
+				}
 
-      // Déclaration de la variable événement
-      SDL_Event  event;
+				if (event.key.keysym.sym == SDLK_UP)
+					bouton_fleche.haut = true;
 
-      // Récupération des événement avec la SDL
-      while (SDL_PollEvent(&event)) {
-        switch (event.type) {
-          case SDL_QUIT:
-            croix_fermeture = true;
-          break;
-          case SDL_MOUSEMOTION:
-            monCurseur.position.x = event.motion.x;
-            monCurseur.position.y = event.motion.y;
-            coordMouse.x = monCurseur.position.x;
-            coordMouse.y = monCurseur.position.y;
-          break;
-          case SDL_MOUSEBUTTONDOWN:
-            coordClic.x = event.button.x;
-            coordClic.y = event.button.y;
-          break;
-          case SDL_KEYDOWN:
-            if (event.key.keysym.sym == SDLK_ESCAPE)
-              echap = true;
-          break;
+				if (event.key.keysym.sym == SDLK_DOWN)
+					bouton_fleche.bas = true;
+			}
+			break;
 
-          default:
-          break;
-        }
-      }
+			default:
+				break;
+			}
+		}
+		// Suppression du rendu
+		SDL_RenderClear(renderer);
+		// Affichage du fond
+		creationBackground(renderer, fenetre, configuration);
+		// Utilisation des évenements récupérés en fonction de la position en menu ou non de l'utilisateur
+		switch (loc)
+		{
+		// Si l'utilisateur est en jeu
+		case inGame:
+		{
+			if (croix_fermeture)
+				loc = quit;
 
-      // Suppression du rendu
-      SDL_RenderClear(renderer);
-      // Affichage du fond
-      creationBackground(renderer,fenetre);
-      // Utilisation des évenements récupérés en fonction de la position en menu ou non de l'utilisateur
-      switch (loc) {
-        // Si l'utilisateur est en jeu
-        case inGame:{
-          if(croix_fermeture)
-            loc = quit;
-          if(echap)
-            inPause = !inPause;
+			if (echap)
+				inPause = !inPause;
 
-          TourJoueurs(tab,param_partie,coordClic.x,coordClic.y, plateau, &selectedBox,restriction, move);
-          creationFond(renderer,window,fenetre,coordClic,coordMouse, &inPause, move);
-          generatePion(window,renderer,plateau,tab,selectedBox);
-          FiltreDeplacement(window,renderer,plateau,tab,selectedBox, move, restriction);
+			// Test des conditions de fin de partie
+			fin_partie endGame = conditionDeFin(&partie_en_cours);
+			if (endGame.fin == 0)
+			{
+				TourJoueurs(&partie_en_cours, coordClic.x, coordClic.y, plateau);
+				plateauDeJeu(renderer, window, fenetre, coordClic, coordMouse, &inPause, &partie_en_cours, configuration);
+				generatePion(window, renderer, plateau, &partie_en_cours, configuration);
+				FiltreDeplacement(window, renderer, plateau, &partie_en_cours);
+			}
+			else if (endGame.fin == 2) // Si un utilisateur a perdu on l'élimne de la partie
+			{
+				TourJoueurs(&partie_en_cours, 0, 0, plateau);
+				plateauDeJeu(renderer, window, fenetre, coordClic, coordMouse, &inPause, &partie_en_cours, configuration);
+				generatePion(window, renderer, plateau, &partie_en_cours, configuration);
+				FiltreDeplacement(window, renderer, plateau, &partie_en_cours);
+			}
+			else // Sinon il y'a soit égalité soit une victoire
+			{
+				char *liste_joueurs[4] = {"joueur1", "joueur2", "joueur3", "joueur4"};
+				char nomDuFichier[50];
+				if (endGame.fin == 3)
+				{
+					// Egalité
+					sprintf(nomDuFichier, "jeu/egalite.bmp");
+				}
+				else
+				{
+					// Victoire
+					sprintf(nomDuFichier, "jeu/victoire_%s.bmp", liste_joueurs[endGame.joueur - 1]);
+				}
 
-          // Si on est en pause
-          if(inPause){
-            SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);
-            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
-            SDL_RenderFillRect(renderer, NULL);
-            SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
-            loc = menu_pause(renderer,window,fenetre,coordMouse,coordClic, &inPause, param_partie, move);
-          }
-        }
+				// On affiche l'image correspondante
+				afficherImage(nomDuFichier, CENTER, CENTER, renderer, window, fenetre, configuration);
+				SDL_Color white = {255, 255, 255};
+				afficherTexte("Appuyez sur ENTRER pour revenir au menu principal.", CENTER, 600, white, 50, renderer, window, fenetre);
+				if (save_name.lettre == 27)
+				{
+					loc = inMenu;
+					selection = rien;
+				}
+			}
 
-        break;
+			// Si on est en pause
+			if (inPause)
+			{
+				SDL_SetRenderDrawColor(renderer, 0, 0, 0, 128);
+				SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+				SDL_RenderFillRect(renderer, NULL);
+				SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_NONE);
+				loc = menu_pause(renderer, window, fenetre, coordMouse, coordClic, &inPause, &partie_en_cours, configuration);
+			}
+		}
 
-        // Si l'utilisateur est dans le menu
-        case inMenu:{
+		break;
+		case inSave: // Si l'utilisateur est dans le menu de sauvegarde
+		{
+			if (croix_fermeture)
+				loc = quit;
+			if (echap)
+				loc = inGame;
 
-          // Utilisation des événements
-          if(croix_fermeture || echap)
-            selection = quitter;
+			loc = menu_save(renderer, window, fenetre, partie_en_cours.tab, coordMouse, coordClic, &inPause, &save_name, &saving, configuration);
+		}
+		break;
+		// Si l'utilisateur est dans le menu
+		case inMenu:
+		{
 
-          switch (selection) {
+			// Utilisation des événements
+			if (croix_fermeture)
+				selection = quitter;
 
-            // Si l'utiliseur est en train de quitter
-            case quitter:
-              loc = quit;
-            break;
+			switch (selection)
+			{
 
-            // Si l'utiliseur est en train de commencer
-            case commencer:
-              // Initialisation du tableau qui sert de plateau de jeu en fonction du nombre de joueur
-              initialisationTab(tab,param_partie->joueurs + param_partie->ordis);
-              loc = inGame;
-              selection = rien; // ->Remise à zéro pour le moment où on termine la partie
-            break;
+			// Si l'utiliseur est en train de quitter
+			case quitter:
+				loc = quit;
+				break;
 
-            // Si l'utiliseur ne fait rien et n'a rien fait : il est dans le menu principal
-            case rien:
-              selection = menu_principal(renderer,window,fenetre,coordMouse,coordClic);
-            break;
+			// Si l'utiliseur est en train de commencer
+			case commencer:
+				initNomSauvegarde(&save_name);
+				loc = inGame;
+				selection = rien; // ->Remise à zéro pour le moment où on termine la partie
+				break;
 
-            // Si l'utiliseur ne fait rien mais à fait quelque chose qui ne pas quitter ou commencer : il est dans un menu secondaire
-            default:
-              selection = menu_secondaire(renderer,window,fenetre, selection,coordMouse,coordClic, param_partie);
-            break;
-          }
-        }
-        break;
+			// Si l'utiliseur ne fait rien et n'a rien fait : il est dans le menu principal
+			case rien:
+				selection = menu_principal(renderer, window, fenetre, coordMouse, coordClic, configuration);
+				if (echap)
+					selection = quitter;
 
-        // L'utiliseur quitte forcément
-        default:
-        break;
-      }
+				if (selection == rejouer)
+					bouton_fleche.element = 1;
+				break;
 
+			// Si l'utiliseur ne fait rien mais à fait quelque chose qui ne pas quitter ou commencer : il est dans un menu secondaire
+			default:
+				liste_sauvegarde = menu_secondaire(renderer, window, fenetre, &selection, coordMouse, coordClic, &partie_en_cours, liste_sauvegarde, &bouton_fleche, &configuration);
+				if (echap)
+					selection = rien;
 
-      // Affichage des éléments toujours présents curseur + FPS
-      // Limitation des FPS
-      afficherCurseur(monCurseur,renderer);
-      limit_fps(frame_limit,fenetre,window,renderer);
-      frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
+				break;
+			}
+		}
+		break;
 
-      SDL_RenderPresent(renderer);
+		// L'utiliseur quitte forcément
+		default:
+			break;
+		}
 
+		// Affichage des éléments toujours présents curseur + FPS
+		// Limitation des FPS
+		afficherCurseur(monCurseur, renderer);
+		limit_fps(frame_limit, fenetre, window, renderer, configuration);
+		frame_limit = SDL_GetTicks() + FRAME_PER_SECOND;
+		SDL_RenderPresent(renderer);
 
+		// Sauvegarde de la partie actuelle
+		if (saving)
+		{
+			// On vérifie que la sauvegarde n'exizte pas déjà si c'est le cas on la supprime
+			if (exist_save(liste_sauvegarde, save_name.nom))
+				liste_sauvegarde = delete_save(liste_sauvegarde, save_name.nom);
 
-  }
+			// On copie le nom que l'on a précédamment créé
+			for (int i = 0; i < NAME_LENGTH; i++)
+			{
+				partie_en_cours.name[i] = save_name.nom[i];
+			}
+			// On rajoute la sauvegarde dans la liste
+			liste_sauvegarde = add_save(liste_sauvegarde, partie_en_cours);
 
-    // Destruction du curseur, du renderer et de la fenêtre et fermeture de la SDL
-    detruireCurseur(monCurseur);
-    SDL_DestroyRenderer(renderer);
-    SDL_DestroyWindow(window);
-    TTF_Quit();
-    SDL_Quit();
+			// On retourne en jeu
+			saving = false;
+			loc = inGame;
+		}
 
-    return 0;
+		// Décrémentation du temps de jeu si l'option tour chrono est activé
+		if (!inPause && partie_en_cours.parametre.chrono)
+		{
+			// Si le joueur n'est pas en pause on calcule le temp que parcours le jeu pour atteindre une seconde
+			acc_time += 1.0 / (frame_limit - SDL_GetTicks());
+			if (acc_time >= 1)
+			{
+				// Si il vient de s'écouler une seconde on décrémente le temps du tour du joueur
+				acc_time = 0;
+				partie_en_cours.time--;
+			}
+		}
+	}
+
+	// Exportation sauvegarde et fichier configuration
+	fichier_sauvegarde = export_saves(liste_sauvegarde, fichier_sauvegarde);
+	fichier_configuration = export_config(configuration, fichier_configuration);
+
+	// On libère la liste de sauvegarde
+	liste_sauvegarde = deleteAll_savesList(liste_sauvegarde);
+
+	// On ferme les fichiers de sauvegarde et de configuration
+	close_saves_list(fichier_sauvegarde);
+	close_config(fichier_configuration);
+
+	// ON détruit les éléments graphique et on ferme la SDL
+	detruireCurseur(monCurseur);
+	SDL_DestroyRenderer(renderer);
+	SDL_DestroyWindow(window);
+	TTF_Quit();
+	SDL_Quit();
+
+	return 0;
 }
